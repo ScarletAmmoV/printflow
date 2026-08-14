@@ -1,11 +1,12 @@
 import axios from 'axios';
 
+// Si estamos en desarrollo, usa localhost. Si no, usa la variable de entorno de producción.
+const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+
 const api = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  baseURL,
 });
 
-// ¡ESTO ES LO QUE FALTABA! 
-// Antes de hacer cualquier petición, busca el token en el almacenamiento y lo adjunta
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -14,12 +15,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptamos las respuestas del servidor
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Si la sesión expiró o el token es inválido
       localStorage.removeItem('token');
       localStorage.removeItem('taller');
       window.location.href = '/login';
