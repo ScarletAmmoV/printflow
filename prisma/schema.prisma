@@ -1,0 +1,34 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Taller {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  usuario   String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  pedidos   Pedido[]
+}
+
+model Pedido {
+  id                         Int       @id @default(autoincrement())
+  tallerId                   Int
+  taller                     Taller    @relation(fields: [tallerId], references: [id])
+  numeroOrden                String
+  nombreCliente              String
+  apellidoCliente            String
+  telefono                   String
+  detalle                    String
+  metodoEntrega              String
+  estado                     String    @default("pendiente")
+  estadoAnterior             String?
+  fechaEntrada               DateTime  @default(now())
+  notificacionProgramadaPara DateTime?
+  notificacionEnviada        Boolean   @default(false)
+}
