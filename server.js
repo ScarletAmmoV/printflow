@@ -12,29 +12,44 @@ app.use(cors());
 app.use(express.json());
 
 const JWT_SECRET = process.env.JWT_SECRET || 'printflow_secreto_dev';
-// Configuración UltraMsg (WhatsApp Real)
-const ULTRA_INSTANCE = process.env.ULTRA_INSTANCE;
-const ULTRA_TOKEN = process.env.ULTRA_TOKEN;
+// Configuración API Oficial de Meta (WhatsApp Cloud API)
+const META_TOKEN = process.env.META_TOKEN;
+const META_PHONE_ID = process.env.META_PHONE_ID;
 
-async function enviarWhatsAppReal(pedido, nombreTaller) {
+async function enviarWhatsAppReal(pedido, nombreTaller, mensajePersonalizado = null) {
   try {
-    const mensaje = `*${nombreTaller}*: Tu pedido #${pedido.numeroOrden} está listo para ${pedido.metodoEntrega === 'retiro' ? 'retiro' : 'envío'}.`;
+    let mensaje;
+    if (mensajePersonalizado) {
+      mensaje = mensajePersonalizado;
+    } else {
+      mensaje = `*${nombreTaller}*: Tu pedido #${pedido.numeroOrden} está listo para ${pedido.metodoEntrega === 'retiro' ? 'retiro' : 'envío'}.`;
+    }
     
-    const response = await fetch(`https://api.ultramsg.com/${ULTRA_INSTANCE}/messages/chat`, {
+    // Usamos la API oficial de Meta
+    const response = await fetch(`https://graph.facebook.com/v18.0/${META_PHONE_ID}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${META_TOKEN}`
+      },
       body: JSON.stringify({
-        token: ULTRA_TOKEN,
+        messaging_product: "whatsapp",
         to: pedido.telefono,
-        body: mensaje
+        type: "text",
+        text: { body: mensaje }
       })
     });
     
     const data = await response.json();
-    console.log(`[WhatsApp Real Enviado] Pedido #${pedido.numeroOrden} - Estado: ${data.sent || data.message}`);
-    return true;
+    if (data.messages && data.messages[0]) {
+      console.log(`[WhatsApp Meta Enviado] Pedido #${pedido.numeroOrden} - ID: ${data.messages[0].id}`);
+      return true;
+    } else {
+      console.error('Error de Meta API:', data);
+      return false;
+    }
   } catch (error) {
-    console.error('Error al enviar WhatsApp:', error);
+    console.error('Error al enviar WhatsApp por Meta:', error);
     return false;
   }
 }
