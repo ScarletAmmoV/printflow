@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from './api';
 import OrderFormModal from './OrderFormModal';
+import Ajustes from './Ajustes';
 import { 
   MoreVertical, Pencil, Undo2, Zap, Trash2, RotateCcw, MessageCircle, 
   ChevronLeft, ChevronRight, Search, Calendar, PlusCircle, CheckCircle, 
-  Clock, Layers, Moon, Sun, X
+  Clock, Layers, Moon, Sun, X, Settings
 } from 'lucide-react';
 
 // Cronómetro
@@ -147,11 +148,12 @@ export default function Dashboard() {
     return num > 9999 ? '+9999' : num;
   };
 
-  const tabs = [
+    const tabs = [
     { id: 'pendiente', label: 'Pendientes', count: counts.pendientes, icon: Clock },
     { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: CheckCircle },
     { id: 'todos', label: 'Todos', count: counts.pendientes + counts.finalizados, icon: Layers },
     { id: 'eliminado', label: 'Papelera', count: counts.eliminados, icon: Trash2 },
+    { id: 'ajustes', label: 'Ajustes', count: null, icon: Settings },
   ];
 
   return (
@@ -180,10 +182,12 @@ export default function Dashboard() {
                   <Icon size={18} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="text-sm">{t.label}</span>}
                 </div>
-                {sidebarCollapsed ? (
-                  <span className={`absolute bottom-1 right-1 px-1 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count, true)}</span>
-                ) : (
-                  <span className={`px-2 py-0.5 rounded-full text-xs ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count)}</span>
+                {t.count !== null && (
+                  sidebarCollapsed ? (
+                    <span className={`absolute bottom-1 right-1 px-1 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count, true)}</span>
+                  ) : (
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count)}</span>
+                  )
                 )}
               </button>
             );
@@ -204,6 +208,11 @@ export default function Dashboard() {
       </nav>
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
+        
+        {tab === 'ajustes' ? (
+          <Ajustes />
+        ) : (
+        <>
         
         {/* MÉTRICAS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
@@ -344,6 +353,8 @@ export default function Dashboard() {
             </table>
           )}
         </div>
+        </>
+        )}
       </main>
 
       {showModal && (

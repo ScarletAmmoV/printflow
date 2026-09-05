@@ -16,21 +16,31 @@ const JWT_SECRET = process.env.JWT_SECRET || 'printflow_secreto_dev';
 const META_TOKEN = process.env.META_TOKEN;
 const META_PHONE_ID = process.env.META_PHONE_ID;
 
-async function enviarWhatsAppReal(pedido, nombreTaller, mensajePersonalizado = null) {
+async function enviarWhatsAppReal(pedido, tallerConfig, mensajePersonalizado = null) {
   try {
+    // Si el taller no configuró sus credenciales, no podemos enviar
+    if (!tallerConfig.metaToken || !tallerConfig.metaPhoneId) {
+      console.log(`[WhatsApp Omitido] Taller ${tallerConfig.nombre} no tiene credenciales configuradas.`);
+      return false;
+    }
+    
     let mensaje;
     if (mensajePersonalizado) {
       mensaje = mensajePersonalizado;
     } else {
-      mensaje = `*${nombreTaller}*: Tu pedido #${pedido.numeroOrden} está listo para ${pedido.metodoEntrega === 'retiro' ? 'retiro' : 'envío'}.`;
+      // Reemplazamos las variables en la plantilla del taller
+      mensaje = (tallerConfig.plantillaMensaje || "Hola {cliente}, tu pedido #{orden} está listo.")
+        .replace(/{taller}/g, tallerConfig.nombre)
+        .replace(/{cliente}/g, `${pedido.nombreCliente} ${pedido.apellidoCliente}`)
+        .replace(/{orden}/g, pedido.numeroOrden)
+        .replace(/{entrega}/g, pedido.metodoEntrega === 'retiro' ? 'retiro' : 'envío');
     }
     
-    // Usamos la API oficial de Meta
-    const response = await fetch(`https://graph.facebook.com/v18.0/${META_PHONE_ID}/messages`, {
+    const response = await fetch(`https://graph.facebook.com/v18.0/${tallerConfig.metaPhoneId}/messages`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${META_TOKEN}`
+        'Authorization': `Bearer ${tallerConfig.metaToken}`
       },
       body: JSON.stringify({
         messaging_product: "whatsapp",
@@ -42,14 +52,14 @@ async function enviarWhatsAppReal(pedido, nombreTaller, mensajePersonalizado = n
     
     const data = await response.json();
     if (data.messages && data.messages[0]) {
-      console.log(`[WhatsApp Meta Enviado] Pedido #${pedido.numeroOrden} - ID: ${data.messages[0].id}`);
+      console.log(`[WhatsApp Enviado] Pedido #${pedido.numeroOrden} - Taller: ${tallerConfig.nombre}`);
       return true;
     } else {
       console.error('Error de Meta API:', data);
       return false;
     }
   } catch (error) {
-    console.error('Error al enviar WhatsApp por Meta:', error);
+    console.error('Error al enviar WhatsApp:', error);
     return false;
   }
 }
@@ -63,14 +73,10 @@ setInterval(async () => {
       where: { estado: 'finalizado', notificacionEnviada: false, notificacionProgramadaPara: { lte: ahora } }
     });
 
-    for (const pedido of pedidosListos) {
-      // Buscamos el nombre del taller para firmar el mensaje
+        for (const pedido of pedidosListos) {
       const taller = await prisma.taller.findUnique({ where: { id: pedido.tallerId } });
+      const enviado = await enviarWhatsAppReal(pedido, taller);
       
-      // Enviamos el mensaje real
-      const enviado = await enviarWhatsAppReal(pedido, taller?.nombre || 'PrintFlow');
-      
-      // Si se envió bien, lo marcamos como enviado en la base de datos
       if (enviado) {
         await prisma.pedido.update({
           where: { id: pedido.id },
@@ -286,7 +292,32 @@ app.patch('/api/pedidos/:id/restaurar', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al restaurar el pedido' });
   }
 });
+// OBTENER AJUSTES
+app.get('/api/ajustes', verificarToken, async (req, res) => {
+  try {
+    const taller = await prisma.taller.findUnique({
+      where: { id: req.tallerId },
+      select: { nombre: true, metaToken: true, metaPhoneId: true, plantillaMensaje: true }
+    });
+    res.json(taller);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener ajustes' });
+  }
+});
 
+// GUARDAR AJUSTES
+app.put('/api/ajustes', verificarToken, async (req, res) => {
+  try {
+    const { metaToken, metaPhoneId, plantillaMensaje } = req.body;
+    await prisma.taller.update({
+      where: { id: req.tallerId },
+      data: { metaToken, metaPhoneId, plantillaMensaje }
+    });
+    res.json({ message: 'Ajustes guardados correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al guardar ajustes' });
+  }
+});
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
   try {
