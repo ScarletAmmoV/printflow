@@ -14,6 +14,11 @@ model Taller {
   password  String
   createdAt DateTime @default(now())
   pedidos   Pedido[]
+  
+  // Nuevos campos de configuración
+  metaToken       String?
+  metaPhoneId     String?
+  plantillaMensaje String? @default("*{taller}*: Hola {cliente}! Tu pedido #{orden} está listo para {entrega}.")
 }
 
 model Pedido {
