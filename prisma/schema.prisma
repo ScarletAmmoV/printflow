@@ -28,6 +28,7 @@ model Pedido {
   numeroOrden                String
   nombreCliente              String
   apellidoCliente            String
+  emailCliente               String?   // NUEVO: Email del cliente
   telefono                   String
   detalle                    String
   metodoEntrega              String
@@ -36,4 +37,8 @@ model Pedido {
   fechaEntrada               DateTime  @default(now())
   notificacionProgramadaPara DateTime?
   notificacionEnviada        Boolean   @default(false)
+  
+  // NUEVO: Gestión de archivos de Gmail
+  archivosAdjuntos           String?   // Lista de links separados por coma
+  archivosImpresos           Boolean   @default(false)
 }
