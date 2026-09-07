@@ -15,6 +15,10 @@ const JWT_SECRET = process.env.JWT_SECRET || 'printflow_secreto_dev';
 // Configuración API Oficial de Meta (WhatsApp Cloud API)
 const META_TOKEN = process.env.META_TOKEN;
 const META_PHONE_ID = process.env.META_PHONE_ID;
+// Configuración Gmail API
+const GMAIL_CLIENT_ID = process.env.GMAIL_CLIENT_ID;
+const GMAIL_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
+const GMAIL_REDIRECT_URI = process.env.GMAIL_REDIRECT_URI;
 
 async function enviarWhatsAppReal(pedido, tallerConfig, mensajePersonalizado = null) {
   try {
@@ -317,6 +321,53 @@ app.put('/api/ajustes', verificarToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Error al guardar ajustes' });
   }
+});
+// =======================================================
+// RUTAS DE GMAIL (OAuth)
+// =======================================================
+const { google } = require('googleapis');
+
+const oauth2Client = new google.auth.OAuth2(
+  GMAIL_CLIENT_ID,
+  GMAIL_CLIENT_SECRET,
+  GMAIL_REDIRECT_URI
+);
+
+// 1. Iniciar conexión con Gmail
+app.get('/api/gmail/auth', verificarToken, (req, res) => {
+  const url = oauth2Client.generateAuthUrl({
+    access_type: 'offline',
+    scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify'],
+    state: req.tallerId.toString() // Le pasamos el ID del taller a Google para que nos lo devuelva
+  });
+  res.json({ url });
+});
+
+// 2. Google nos devuelve acá con el permiso
+app.get('/api/gmail/callback', async (req, res) => {
+  const code = req.query.code;
+  const tallerId = parseInt(req.query.state);
+  
+  try {
+    const { tokens } = await oauth2Client.getToken(code);
+    await prisma.taller.update({
+      where: { id: tallerId },
+      data: {
+        gmailAccessToken: tokens.access_token,
+        gmailRefreshToken: tokens.refresh_token
+      }
+    });
+    res.send('<script>window.close();</script><h1>Gmail conectado con éxito. Podés cerrar esta ventana.</h1>');
+  } catch (error) {
+    console.error('Error en callback de Gmail:', error);
+    res.status(500).send('Error al conectar Gmail');
+  }
+});
+
+// 3. Saber si ya está conectado
+app.get('/api/gmail/status', verificarToken, async (req, res) => {
+  const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
+  res.json({ connected: !!taller?.gmailAccessToken });
 });
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {

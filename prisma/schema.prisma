@@ -15,10 +15,14 @@ model Taller {
   createdAt DateTime @default(now())
   pedidos   Pedido[]
   
-  // Nuevos campos de configuración
+  // Configuración Meta
   metaToken       String?
   metaPhoneId     String?
   plantillaMensaje String? @default("*{taller}*: Hola {cliente}! Tu pedido #{orden} está listo para {entrega}.")
+  
+  // NUEVO: Tokens de Gmail
+  gmailAccessToken  String?
+  gmailRefreshToken String?
 }
 
 model Pedido {
