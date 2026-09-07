@@ -108,7 +108,99 @@ const verificarToken = (req, res, next) => {
     res.status(401).json({ error: 'Token inválido o expirado' });
   }
 };
+// =======================================================
+// EL REVISOR DE GMAIL (Worker)
+// =======================================================
+setInterval(async () => {
+  try {
+    // Buscamos todos los talleres que tengan Gmail conectado
+    const talleres = await prisma.taller.findMany({
+      where: { gmailAccessToken: { not: null }, gmailRefreshToken: { not: null } }
+    });
 
+    for (const taller of talleres) {
+      // Configuramos el cliente de Google con los tokens de este taller
+      oauth2Client.setCredentials({
+        access_token: taller.gmailAccessToken,
+        refresh_token: taller.gmailRefreshToken
+      });
+
+      // Si el token expira, Google automáticamente usa el refresh token para pedir uno nuevo
+      oauth2Client.on('tokens', (tokens) => {
+        if (tokens.access_token) {
+          prisma.taller.update({ where: { id: taller.id }, data: { gmailAccessToken: tokens.access_token } });
+        }
+      });
+
+      const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
+
+      // Buscamos correos no leídos que tengan adjuntos
+      const res = await gmail.users.messages.list({
+        userId: 'me',
+        q: 'has:attachment is:unread'
+      });
+
+      if (!res.data.messages) continue; // Si no hay mails, saltamos al siguiente taller
+
+      for (const msg of res.data.messages) {
+        // Obtenemos el detalle del mail
+        const email = await gmail.users.messages.get({ userId: 'me', id: msg.id });
+        
+        let from = '';
+        let subject = '';
+        let attachments = [];
+
+        // Leemos los encabezados para saber quién lo manda y el asunto
+        const headers = email.data.payload.headers;
+        for (const h of headers) {
+          if (h.name === 'From') from = h.value;
+          if (h.name === 'Subject') subject = h.value;
+        }
+
+        // Buscamos los archivos adjuntos
+        if (email.data.payload.parts) {
+          for (const part of email.data.payload.parts) {
+            if (part.filename && part.filename.length > 0) {
+              attachments.push(part.filename);
+            }
+          }
+        }
+
+        // Lógica de automatización (La que charlamos)
+        let numeroOrden = String(Math.floor(Math.random() * 9000) + 1000); // Genera un número aleatorio por ahora
+        let nombreCompleto = from.split('<')[0].trim().split(' ');
+        let emailMatch = from.match(/<(.+)>/);
+        let fromEmail = emailMatch ? emailMatch[1] : from;
+
+        // Creamos el pedido en la base de datos
+        await prisma.pedido.create({
+          data: {
+            tallerId: taller.id,
+            numeroOrden: numeroOrden,
+            nombreCliente: nombreCompleto[0] || 'Cliente',
+            apellidoCliente: nombreCompleto.slice(1).join(' ') || 'Gmail',
+            emailCliente: fromEmail,
+            telefono: '0000000000', // Pendiente de que el dueño lo complete
+            detalle: subject || 'Diseño recibido por Gmail',
+            metodoEntrega: 'retiro',
+            archivosAdjuntos: attachments.join(', ') || 'Sin archivos'
+          }
+        });
+
+        // Marcamos el mail como "Leído" para que no lo vuelva a procesar
+        await gmail.users.messages.modify({
+          userId: 'me',
+          id: msg.id,
+          requestBody: { removeLabelIds: ['UNREAD'] }
+        });
+
+        console.log(`[Gmail] Pedido automático creado para ${taller.nombre}: ${attachments.join(', ')}`);
+      }
+    }
+  } catch (error) {
+    console.error('Error en el revisor de Gmail:', error);
+  }
+}, 60000); // 60000 milisegundos = 1 minuto
 // =======================================================
 // RUTAS DE AUTENTICACIÓN
 // =======================================================
