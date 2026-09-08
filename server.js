@@ -134,27 +134,43 @@ setInterval(async () => {
 
       const gmail = google.gmail({ version: 'v1', auth: oauth2Client });
 
-      // Buscamos correos no leídos que tengan adjuntos
+      // 1. FILTRO A LA ENTRADA (API de Gmail): Ignora listas, noreply y correos comunes de bots
       const res = await gmail.users.messages.list({
         userId: 'me',
-        q: 'has:attachment is:unread'
+        q: 'has:attachment is:unread newer_than:1d -list:* -from:noreply -from:no-reply -from:notificaciones -from:info -from:soporte',
+        maxResults: 3
       });
 
       if (!res.data.messages) continue; // Si no hay mails, saltamos al siguiente taller
 
+      // Lista de prefijos de correo que no son clientes
+      const prefijosBan = ['facturacion', 'ventas', 'admin', 'contacto', 'notificaciones'];
+      
       for (const msg of res.data.messages) {
-        // Obtenemos el detalle del mail
         const email = await gmail.users.messages.get({ userId: 'me', id: msg.id });
         
         let from = '';
         let subject = '';
         let attachments = [];
+        let isAutoReply = false;
 
-        // Leemos los encabezados para saber quién lo manda y el asunto
         const headers = email.data.payload.headers;
         for (const h of headers) {
           if (h.name === 'From') from = h.value;
           if (h.name === 'Subject') subject = h.value;
+          
+          // 2. FILTRO DE ENCABEZADOS (RFC): Si tiene List-Unsubscribe, es boletín/factura
+          if (h.name === 'List-Unsubscribe') isAutoReply = true;
+        }
+
+        let emailMatch = from.match(/<(.+)>/);
+        let fromEmail = emailMatch ? emailMatch[1] : from;
+        let emailPrefix = fromEmail.split('@')[0].toLowerCase();
+
+        // Si es auto-reply o viene de un correo genérico de empresa, lo ignoramos
+        if (isAutoReply || prefijosBan.some(prefix => emailPrefix.includes(prefix))) {
+          await gmail.users.messages.modify({ userId: 'me', id: msg.id, requestBody: { removeLabelIds: ['UNREAD'] } });
+          continue;
         }
 
         // Buscamos los archivos adjuntos
@@ -166,13 +182,11 @@ setInterval(async () => {
           }
         }
 
-        // Lógica de automatización (La que charlamos)
-        let numeroOrden = String(Math.floor(Math.random() * 9000) + 1000); // Genera un número aleatorio por ahora
+        // Lógica de automatización
+        let numeroOrden = String(Math.floor(Math.random() * 9000) + 1000);
         let nombreCompleto = from.split('<')[0].trim().split(' ');
-        let emailMatch = from.match(/<(.+)>/);
-        let fromEmail = emailMatch ? emailMatch[1] : from;
 
-        // Creamos el pedido en la base de datos
+        // Creamos el pedido en estado "pago_pendiente"
         await prisma.pedido.create({
           data: {
             tallerId: taller.id,
@@ -183,18 +197,14 @@ setInterval(async () => {
             telefono: '0000000000', // Pendiente de que el dueño lo complete
             detalle: subject || 'Diseño recibido por Gmail',
             metodoEntrega: 'retiro',
+            estado: 'pago_pendiente', // NUEVO ESTADO
             archivosAdjuntos: attachments.join(', ') || 'Sin archivos'
           }
         });
 
         // Marcamos el mail como "Leído" para que no lo vuelva a procesar
-        await gmail.users.messages.modify({
-          userId: 'me',
-          id: msg.id,
-          requestBody: { removeLabelIds: ['UNREAD'] }
-        });
-
-        console.log(`[Gmail] Pedido automático creado para ${taller.nombre}: ${attachments.join(', ')}`);
+        await gmail.users.messages.modify({ userId: 'me', id: msg.id, requestBody: { removeLabelIds: ['UNREAD'] } });
+        console.log(`[Gmail] Pedido en espera de pago creado para ${taller.nombre}: ${attachments.join(', ')}`);
       }
     }
   } catch (error) {
