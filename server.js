@@ -471,10 +471,24 @@ app.get('/api/gmail/status', verificarToken, async (req, res) => {
   const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
   res.json({ connected: !!taller?.gmailAccessToken });
 });
+// MARCAR ARCHIVOS COMO IMPRESOS
+app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await prisma.pedido.updateMany({
+      where: { id: parseInt(id), tallerId: req.tallerId },
+      data: { archivosImpresos: true }
+    });
+    res.json({ message: 'Archivos marcados como impresos' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar' });
+  }
+});
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
   try {
     const pendientes = await prisma.pedido.count({ where: { tallerId: req.tallerId, estado: 'pendiente' } });
+    const pago_pendiente = await prisma.pedido.count({ where: { tallerId: req.tallerId, estado: 'pago_pendiente' } });
     const finalizados = await prisma.pedido.count({ where: { tallerId: req.tallerId, estado: 'finalizado' } });
     const eliminados = await prisma.pedido.count({ where: { tallerId: req.tallerId, estado: 'eliminado' } });
 
@@ -492,7 +506,7 @@ app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
       where: { tallerId: req.tallerId, estado: 'finalizado', fechaEntrada: { gte: lunes } }
     });
 
-    res.json({ pendientes, finalizados, eliminados, finalizadosSemana, finalizadosHoy });
+    res.json({ pendientes, finalizados, eliminados, finalizadosSemana, finalizadosHoy, pago_pendiente });
   } catch (error) {
     res.status(500).json({ error: 'Error al contar los pedidos' });
   }

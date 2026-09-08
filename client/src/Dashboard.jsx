@@ -5,7 +5,7 @@ import Ajustes from './Ajustes';
 import { 
   MoreVertical, Pencil, Undo2, Zap, Trash2, RotateCcw, MessageCircle, 
   ChevronLeft, ChevronRight, Search, Calendar, PlusCircle, CheckCircle, 
-  Clock, Layers, Moon, Sun, X, Settings
+  Clock, Layers, Moon, Sun, X, Settings, Paperclip
 } from 'lucide-react';
 
 // Cronómetro
@@ -61,7 +61,7 @@ const formatFecha = (dateStr) => {
 export default function Dashboard() {
   const [tab, setTab] = useState('pendiente');
   const [pedidos, setPedidos] = useState([]);
-  const [counts, setCounts] = useState({ pendientes: 0, finalizados: 0, eliminados: 0, finalizadosSemana: 0, finalizadosHoy: 0 });
+  const [counts, setCounts] = useState({ pendientes: 0, finalizados: 0, eliminados: 0, finalizadosSemana: 0, finalizadosHoy: 0, pago_pendiente: 0 });
   const [search, setSearch] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [loading, setLoading] = useState(true);
@@ -127,7 +127,7 @@ export default function Dashboard() {
     setOpenMenu({ id, direction });
   };
 
-      const handleAccion = async (id, accion) => {
+  const handleAccion = async (id, accion) => {
     setOpenMenu({ id: null, direction: 'down' });
     try {
       if (accion === 'eliminar') { await api.patch(`/pedidos/${id}/eliminar`); showToast('Pedido movido a papelera'); }
@@ -135,6 +135,7 @@ export default function Dashboard() {
       if (accion === 'finalizar') { await api.patch(`/pedidos/${id}/finalizar`); showToast('Cronómetro iniciado'); }
       if (accion === 'revertir') { await api.patch(`/pedidos/${id}/revertir`); showToast('Notificación cancelada'); }
       if (accion === 'enviar-ya') { await api.patch(`/pedidos/${id}/enviar-ya`); showToast('WhatsApp enviado'); }
+      if (accion === 'marcar-impresos') { await api.patch(`/pedidos/${id}/marcar-impresos`); showToast('Archivos marcados como impresos'); }
       await fetchPedidos(); await fetchCounts();
     } catch (err) { showToast('Error al actualizar'); }
   };
@@ -148,10 +149,10 @@ export default function Dashboard() {
     return num > 9999 ? '+9999' : num;
   };
 
-    const tabs = [
-    { id: 'pendiente', label: 'Pendientes', count: counts.pendientes, icon: Clock },
-    { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: CheckCircle },
-    { id: 'todos', label: 'Todos', count: counts.pendientes + counts.finalizados, icon: Layers },
+  const tabs = [
+    { id: 'pago_pendiente', label: 'Pago Pendiente', count: counts.pago_pendiente, icon: Clock },
+    { id: 'pendiente', label: 'En Cola', count: counts.pendientes, icon: CheckCircle },
+    { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: Layers },
     { id: 'eliminado', label: 'Papelera', count: counts.eliminados, icon: Trash2 },
     { id: 'ajustes', label: 'Ajustes', count: null, icon: Settings },
   ];
@@ -266,6 +267,7 @@ export default function Dashboard() {
                   <th className="px-4 py-3">Orden / Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 hidden lg:table-cell">Detalle</th>
+                  <th className="px-4 py-3 text-center">Archivos</th>
                   <th className="px-4 py-3">Entrega</th>
                   <th className="px-4 py-3">Estado / Tiempo</th>
                   <th className="px-4 py-3 text-right relative">Acciones</th> {/* relative para el menú */}
@@ -287,12 +289,29 @@ export default function Dashboard() {
                         </a>
                       </div>
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
-                      <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${p.metodoEntrega === 'retiro' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}`}>{p.metodoEntrega}</span>
-                    </td>
+                                          <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
+                        <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        {p.archivosAdjuntos ? (
+                          <button 
+                            onClick={() => {
+                              if (confirm(`Archivos:\n${p.archivosAdjuntos}\n\n¿Querés marcar estos archivos como ya impresos?`)) {
+                                handleAccion(p.id, 'marcar-impresos');
+                              }
+                            }}
+                            title={p.archivosAdjuntos}
+                            className={`p-2 rounded-full ${p.archivosImpresos ? 'text-green-500' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`}
+                          >
+                            {p.archivosImpresos ? <CheckCircle size={18} /> : <Paperclip size={18} />}
+                          </button>
+                        ) : (
+                          <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${p.metodoEntrega === 'retiro' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}`}>{p.metodoEntrega}</span>
+                      </td>
                     <td className="px-4 py-3">
                       {p.estado === 'pendiente' && <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">Pendiente</span>}
                       {p.estado === 'eliminado' && <span className="px-2 py-1 rounded text-xs font-medium bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400">Eliminado</span>}
