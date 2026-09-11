@@ -484,6 +484,31 @@ app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) =
     res.status(500).json({ error: 'Error al actualizar' });
   }
 });
+// ELIMINAR PEDIDOS EN MASA
+app.post('/api/pedidos/eliminar-masivo', verificarToken, async (req, res) => {
+  try {
+    const { ids } = req.body; // Recibimos un array de IDs ej: [1, 5, 8]
+    
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ error: 'No se enviaron IDs válidos' });
+    }
+
+    // Recorremos cada ID, guardamos su estado actual y lo mandamos a la papelera
+    for (const id of ids) {
+      const pedido = await prisma.pedido.findFirst({ where: { id: parseInt(id), tallerId: req.tallerId } });
+      if (pedido) {
+        await prisma.pedido.update({
+          where: { id: parseInt(id) },
+          data: { estado: 'eliminado', estadoAnterior: pedido.estado }
+        });
+      }
+    }
+    
+    res.json({ message: `${ids.length} pedido(s) movidos a la papelera` });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al eliminar en masa' });
+  }
+});
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
   try {

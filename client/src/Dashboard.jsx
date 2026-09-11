@@ -62,6 +62,7 @@ export default function Dashboard() {
   const [tab, setTab] = useState('pendiente');
   const [pedidos, setPedidos] = useState([]);
   const [counts, setCounts] = useState({ pendientes: 0, finalizados: 0, eliminados: 0, finalizadosSemana: 0, finalizadosHoy: 0, pago_pendiente: 0 });
+  const [selectedIds, setSelectedIds] = useState([]);
   const [search, setSearch] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [loading, setLoading] = useState(true);
@@ -139,7 +140,30 @@ export default function Dashboard() {
       await fetchPedidos(); await fetchCounts();
     } catch (err) { showToast('Error al actualizar'); }
   };
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
 
+  const handleSelectAll = () => {
+    if (selectedIds.length === pedidos.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pedidos.map(p => p.id));
+    }
+  };
+
+  const handleEliminarMasivo = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`¿Eliminar ${selectedIds.length} pedido(s)?`)) return;
+    
+    try {
+      await api.post('/pedidos/eliminar-masivo', { ids: selectedIds });
+      showToast(`${selectedIds.length} pedido(s) movidos a la papelera`);
+      setSelectedIds([]);
+      await fetchPedidos(); 
+      await fetchCounts();
+    } catch (err) { showToast('Error al eliminar'); }
+  };
   const handleLogout = () => {
     localStorage.removeItem('token'); localStorage.removeItem('taller'); window.location.href = '/login';
   };
@@ -248,6 +272,11 @@ export default function Dashboard() {
               </button>
             )}
           </div>
+          {selectedIds.length > 0 && (
+            <button onClick={handleEliminarMasivo} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 w-full md:w-auto flex items-center justify-center gap-2">
+              <Trash2 size={18} /> Eliminar ({selectedIds.length})
+            </button>
+          )}
           <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
             <PlusCircle size={18} /> Nuevo Pedido
           </button>
@@ -264,6 +293,15 @@ export default function Dashboard() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-200 dark:bg-gray-700/50 text-gray-500 dark:text-gray-300 uppercase text-xs">
                 <tr>
+                    <th className="px-4 py-3 w-10">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedIds.length === pedidos.length && pedidos.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 rounded cursor-pointer"
+                      />
+                    </th>
+                    <th className="px-4 py-3">Orden / Fecha</th>
                   <th className="px-4 py-3">Orden / Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 hidden lg:table-cell">Detalle</th>
@@ -277,6 +315,12 @@ export default function Dashboard() {
                 {pedidos.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                     <td className="px-4 py-3">
+                      <input 
+                          type="checkbox" 
+                          checked={selectedIds.includes(p.id)}
+                          onChange={() => toggleSelect(p.id)}
+                          className="w-4 h-4 rounded cursor-pointer"
+                      />
                       <p className="font-bold text-gray-800 dark:text-gray-100">#{highlightText(p.numeroOrden, search)}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">{formatFecha(p.fechaEntrada)} {new Date(p.fechaEntrada).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </td>
@@ -289,7 +333,7 @@ export default function Dashboard() {
                         </a>
                       </div>
                     </td>
-                                          <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
+                      <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
                         <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
                       </td>
                       <td className="px-4 py-3 text-center">
