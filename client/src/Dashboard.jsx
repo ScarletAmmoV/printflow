@@ -157,7 +157,18 @@ export default function Dashboard() {
       }
     }
   };
-
+  const handleFinalizarMasivo = async () => {
+    if (selectedIds.length === 0) return;
+    if (!confirm(`¿Marcar ${selectedIds.length} pedido(s) como listos? Se iniciarán los cronómetros de WhatsApp.`)) return;
+    
+    try {
+      await api.post('/pedidos/finalizar-masivo', { ids: selectedIds });
+      showToast(`${selectedIds.length} pedidos finalizados`);
+      setSelectedIds([]);
+      await fetchPedidos(); 
+      await fetchCounts();
+    } catch (err) { showToast('Error al finalizar'); }
+  };
   const handleEliminarMasivo = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`¿Eliminar ${selectedIds.length} pedido(s)?`)) return;
