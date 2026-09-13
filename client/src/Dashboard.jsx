@@ -63,6 +63,7 @@ export default function Dashboard() {
   const [pedidos, setPedidos] = useState([]);
   const [counts, setCounts] = useState({ pendientes: 0, finalizados: 0, eliminados: 0, finalizadosSemana: 0, finalizadosHoy: 0, pago_pendiente: 0 });
   const [selectedIds, setSelectedIds] = useState([]);
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
   const [search, setSearch] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [loading, setLoading] = useState(true);
@@ -144,11 +145,16 @@ export default function Dashboard() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
+  // Lógica: Primer clic muestra los checks, segundo clic selecciona todos
   const handleSelectAll = () => {
-    if (selectedIds.length === pedidos.length) {
-      setSelectedIds([]);
+    if (!showCheckboxes) {
+      setShowCheckboxes(true);
     } else {
-      setSelectedIds(pedidos.map(p => p.id));
+      if (selectedIds.length === pedidos.length) {
+        setSelectedIds([]);
+      } else {
+        setSelectedIds(pedidos.map(p => p.id));
+      }
     }
   };
 
@@ -174,9 +180,9 @@ export default function Dashboard() {
   };
 
   const tabs = [
-    { id: 'pago_pendiente', label: 'Pago Pendiente', count: counts.pago_pendiente, icon: Clock },
-    { id: 'pendiente', label: 'En Cola', count: counts.pendientes, icon: CheckCircle },
-    { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: Layers },
+    { id: 'pendiente', label: 'Pendientes', count: counts.pendientes, icon: Clock },
+    { id: 'pago_pendiente', label: 'Esperando Pago', count: counts.pago_pendiente, icon: Layers },
+    { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: CheckCircle },
     { id: 'eliminado', label: 'Papelera', count: counts.eliminados, icon: Trash2 },
     { id: 'ajustes', label: 'Ajustes', count: null, icon: Settings },
   ];
@@ -260,26 +266,29 @@ export default function Dashboard() {
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-80">
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
-              <input type="text" placeholder="Buscar por nombre o orden..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+              <input type="text" placeholder="Buscar por nombre, fecha u orden..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
             </div>
             <div className="relative w-full md:w-48">
               <Calendar size={18} className="absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
               <input type="date" value={searchFecha} onChange={(e) => setSearchFecha(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
             </div>
-            {(search || searchFecha) && (
-              <button onClick={() => { setSearch(''); setSearchFecha(''); }} className="text-sm text-gray-500 hover:text-red-500 flex items-center gap-1">
-                <X size={14} /> Limpiar
-              </button>
-            )}
           </div>
-          {selectedIds.length > 0 && (
-            <button onClick={handleEliminarMasivo} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 w-full md:w-auto flex items-center justify-center gap-2">
-              <Trash2 size={18} /> Eliminar ({selectedIds.length})
+          
+          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            {selectedIds.length > 0 && (
+              <>
+                <button onClick={handleFinalizarMasivo} title="Marcar como listos" className="p-2 text-green-500 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full">
+                  <CheckCircle size={20} />
+                </button>
+                <button onClick={handleEliminarMasivo} title="Eliminar seleccionados" className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full">
+                  <Trash2 size={20} />
+                </button>
+              </>
+            )}
+            <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
+              <PlusCircle size={18} /> Nuevo Pedido
             </button>
-          )}
-          <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
-            <PlusCircle size={18} /> Nuevo Pedido
-          </button>
+          </div>
         </header>
 
         {/* TABLA */}
@@ -293,34 +302,38 @@ export default function Dashboard() {
             <table className="w-full text-sm text-left">
               <thead className="bg-gray-200 dark:bg-gray-700/50 text-gray-500 dark:text-gray-300 uppercase text-xs">
                 <tr>
-                    <th className="px-4 py-3 w-10">
-                      <input 
-                        type="checkbox" 
-                        checked={selectedIds.length === pedidos.length && pedidos.length > 0}
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 rounded cursor-pointer"
-                      />
-                    </th>
-                    <th className="px-4 py-3">Orden / Fecha</th>
+                  <th className="px-4 py-3 w-10 text-center">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.length === pedidos.length && pedidos.length > 0}
+                      onChange={handleSelectAll}
+                      title="Mostrar casillas de selección"
+                      className="w-4 h-4 rounded cursor-pointer"
+                    />
+                  </th>
                   <th className="px-4 py-3">Orden / Fecha</th>
                   <th className="px-4 py-3">Cliente</th>
                   <th className="px-4 py-3 hidden lg:table-cell">Detalle</th>
                   <th className="px-4 py-3 text-center">Archivos</th>
                   <th className="px-4 py-3">Entrega</th>
                   <th className="px-4 py-3">Estado / Tiempo</th>
-                  <th className="px-4 py-3 text-right relative">Acciones</th> {/* relative para el menú */}
+                  <th className="px-4 py-3 text-right relative">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {pedidos.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-3">
-                      <input 
+                    <td className="px-4 py-3 text-center">
+                      {showCheckboxes && (
+                        <input 
                           type="checkbox" 
                           checked={selectedIds.includes(p.id)}
                           onChange={() => toggleSelect(p.id)}
                           className="w-4 h-4 rounded cursor-pointer"
-                      />
+                        />
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
                       <p className="font-bold text-gray-800 dark:text-gray-100">#{highlightText(p.numeroOrden, search)}</p>
                       <p className="text-xs text-gray-400 dark:text-gray-500">{formatFecha(p.fechaEntrada)} {new Date(p.fechaEntrada).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                     </td>
@@ -333,30 +346,31 @@ export default function Dashboard() {
                         </a>
                       </div>
                     </td>
-                      <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
-                        <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        {p.archivosAdjuntos ? (
-                          <button 
-                            onClick={() => {
-                              if (confirm(`Archivos:\n${p.archivosAdjuntos}\n\n¿Querés marcar estos archivos como ya impresos?`)) {
-                                handleAccion(p.id, 'marcar-impresos');
-                              }
-                            }}
-                            title={p.archivosAdjuntos}
-                            className={`p-2 rounded-full ${p.archivosImpresos ? 'text-green-500' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`}
-                          >
-                            {p.archivosImpresos ? <CheckCircle size={18} /> : <Paperclip size={18} />}
-                          </button>
-                        ) : (
-                          <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${p.metodoEntrega === 'retiro' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}`}>{p.metodoEntrega}</span>
-                      </td>
+                    <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
+                      <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      {p.archivosAdjuntos ? (
+                        <button 
+                          onClick={() => {
+                            if (confirm(`Archivos:\n${p.archivosAdjuntos}\n\n¿Querés marcar estos archivos como ya impresos?`)) {
+                              handleAccion(p.id, 'marcar-impresos');
+                            }
+                          }}
+                          title={p.archivosAdjuntos}
+                          className={`p-2 rounded-full ${p.archivosImpresos ? 'text-green-500' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`}
+                        >
+                          {p.archivosImpresos ? <CheckCircle size={18} /> : <Paperclip size={18} />}
+                        </button>
+                      ) : (
+                        <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${p.metodoEntrega === 'retiro' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}`}>{p.metodoEntrega}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {p.estado === 'pago_pendiente' && <span className="px-2 py-1 rounded text-xs font-medium bg-orange-50 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400">Sin Confirmar</span>}
                       {p.estado === 'pendiente' && <span className="px-2 py-1 rounded text-xs font-medium bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-400">Pendiente</span>}
                       {p.estado === 'eliminado' && <span className="px-2 py-1 rounded text-xs font-medium bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400">Eliminado</span>}
                       {p.estado === 'finalizado' && (
@@ -365,7 +379,7 @@ export default function Dashboard() {
                         </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-right relative"> {/* relative para anclar el menú */}
+                    <td className="px-4 py-3 text-right relative">
                       <div className="flex items-center justify-end gap-2">
                         {p.estado === 'pendiente' && (
                           <button onClick={() => handleAccion(p.id, 'finalizar')} className="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-1" title="Marcar como listo">
@@ -377,7 +391,6 @@ export default function Dashboard() {
                         </button>
                       </div>
 
-                                            {/* MENÚ ABSOLUTO DENTRO DE LA CELDA */}
                       {openMenu.id === p.id && (
                         <div 
                           className={`absolute right-4 w-44 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl z-50 py-1 text-left ${openMenu.direction === 'down' ? 'top-full mt-1' : 'bottom-full mb-1'}`} 
