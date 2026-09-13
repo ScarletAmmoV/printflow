@@ -3,7 +3,6 @@ import Login from './Login';
 import Dashboard from './Dashboard';
 
 function App() {
-  // Si hay token en el almacenamiento, consideramos que está logueado
   const token = localStorage.getItem('token');
 
   return (
