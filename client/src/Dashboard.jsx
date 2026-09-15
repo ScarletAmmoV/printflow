@@ -145,14 +145,17 @@ export default function Dashboard() {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  // Lógica: Primer clic muestra los checks, segundo clic selecciona todos
+  // Lógica: Primer clic muestra los checks, segundo clic selecciona todos, tercer clic los oculta
   const handleSelectAll = () => {
     if (!showCheckboxes) {
       setShowCheckboxes(true);
     } else {
       if (selectedIds.length === pedidos.length) {
+        // Si están todos seleccionados, los deselecciono y oculto
         setSelectedIds([]);
+        setShowCheckboxes(false);
       } else {
+        // Si hay algunos seleccionados, marco todos
         setSelectedIds(pedidos.map(p => p.id));
       }
     }
@@ -273,7 +276,7 @@ export default function Dashboard() {
         </div>
 
         {/* BÚSQUEDA */}
-        <header className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <header className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-80">
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
@@ -283,23 +286,23 @@ export default function Dashboard() {
               <Calendar size={18} className="absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
               <input type="date" value={searchFecha} onChange={(e) => setSearchFecha(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
             </div>
-          </div>
-          
-          <div className="flex items-center gap-3 w-full md:w-auto justify-end">
+            
+            {/* ÍCONOS MOVIDOS A LA IZQUIERDA */}
             {selectedIds.length > 0 && (
-              <>
+              <div className="flex items-center gap-1">
                 <button onClick={handleFinalizarMasivo} title="Marcar como listos" className="p-2 text-green-500 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full">
-                  <CheckCircle size={20} />
+                  <CheckCircle size={22} />
                 </button>
                 <button onClick={handleEliminarMasivo} title="Eliminar seleccionados" className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full">
-                  <Trash2 size={20} />
+                  <Trash2 size={22} />
                 </button>
-              </>
+              </div>
             )}
-            <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
-              <PlusCircle size={18} /> Nuevo Pedido
-            </button>
           </div>
+          
+          <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
+            <PlusCircle size={18} /> Nuevo Pedido
+          </button>
         </header>
 
         {/* TABLA */}
@@ -334,14 +337,19 @@ export default function Dashboard() {
               <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                 {pedidos.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                    <td className="px-4 py-3 text-center">
+                     <td className="px-4 py-3 text-center">
                       {showCheckboxes && (
-                        <input 
-                          type="checkbox" 
-                          checked={selectedIds.includes(p.id)}
-                          onChange={() => toggleSelect(p.id)}
-                          className="w-4 h-4 rounded cursor-pointer"
-                        />
+                        <div 
+                          className="flex justify-center items-center w-10 h-10 mx-auto rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" 
+                          onClick={() => toggleSelect(p.id)}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={selectedIds.includes(p.id)}
+                            onChange={() => toggleSelect(p.id)}
+                            className="w-4 h-4 rounded cursor-pointer pointer-events-none"
+                          />
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-3">
