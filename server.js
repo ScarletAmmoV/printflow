@@ -19,7 +19,13 @@ const META_PHONE_ID = process.env.META_PHONE_ID;
 const GMAIL_CLIENT_ID = process.env.GMAIL_CLIENT_ID;
 const GMAIL_CLIENT_SECRET = process.env.GMAIL_CLIENT_SECRET;
 const GMAIL_REDIRECT_URI = process.env.GMAIL_REDIRECT_URI;
-
+// Configuración Cloudinary
+const cloudinary = require('cloudinary').v2;
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 async function enviarWhatsAppReal(pedido, tallerConfig, mensajePersonalizado = null) {
   try {
     // Si el taller no configuró sus credenciales, no podemos enviar
@@ -173,11 +179,34 @@ setInterval(async () => {
           continue;
         }
 
-        // Buscamos los archivos adjuntos
+                // Buscamos y subimos los archivos adjuntos a Cloudinary
         if (email.data.payload.parts) {
           for (const part of email.data.payload.parts) {
             if (part.filename && part.filename.length > 0) {
-              attachments.push(part.filename);
+              // Obtenemos el archivo de Gmail
+              const attachment = await gmail.users.messages.attachments.get({
+                userId: 'me',
+                messageId: msg.id,
+                id: part.body.attachmentId
+              });
+              
+              // Gmail nos lo da en Base64. Lo convertimos en un Buffer (archivo real)
+              const buffer = Buffer.from(attachment.data.data, 'base64');
+              
+              // Lo subimos a Cloudinary
+              const result = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                  { folder: 'kova_solutions', resource_type: 'auto' },
+                  (error, result) => {
+                    if (error) reject(error);
+                    else resolve(result);
+                  }
+                );
+                uploadStream.end(buffer);
+              });
+              
+              // Guardamos la URL pública que nos devolvió Cloudinary
+              attachments.push(result.secure_url);
             }
           }
         }

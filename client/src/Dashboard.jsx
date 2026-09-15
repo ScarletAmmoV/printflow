@@ -368,19 +368,28 @@ export default function Dashboard() {
                     <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
                       <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
                     </td>
-                    <td className="px-4 py-3 text-center">
+                                        <td className="px-4 py-3 text-center">
                       {p.archivosAdjuntos ? (
-                        <button 
-                          onClick={() => {
-                            if (confirm(`Archivos:\n${p.archivosAdjuntos}\n\n¿Querés marcar estos archivos como ya impresos?`)) {
-                              handleAccion(p.id, 'marcar-impresos');
-                            }
-                          }}
-                          title={p.archivosAdjuntos}
-                          className={`p-2 rounded-full ${p.archivosImpresos ? 'text-green-500' : 'text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30'}`}
-                        >
-                          {p.archivosImpresos ? <CheckCircle size={18} /> : <Paperclip size={18} />}
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          {p.archivosAdjuntos.split(',').map((url, index) => (
+                            <a 
+                              key={index}
+                              href={url.trim()} 
+                              target="_blank" 
+                              rel="noreferrer"
+                              onClick={() => !p.archivosImpresos && handleAccion(p.id, 'marcar-impresos')}
+                              title="Abrir archivo para imprimir"
+                              className="p-2 rounded-full text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                            >
+                              <Paperclip size={18} />
+                            </a>
+                          ))}
+                          {p.archivosImpresos && (
+                            <span title="Archivos marcados como impresos" className="p-2 rounded-full text-green-500">
+                              <CheckCircle size={18} />
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
                       )}
