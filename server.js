@@ -481,7 +481,7 @@ app.get('/api/gmail/callback', async (req, res) => {
   const tallerId = parseInt(req.query.state);
   
   try {
-        const { tokens } = await oauth2Client.getToken(code);
+    const { tokens } = await oauth2Client.getToken(code);
     
     // Preparamos los datos a guardar. Siempre guardamos el Access Token.
     const dataToUpdate = { gmailAccessToken: tokens.access_token };
@@ -506,6 +506,21 @@ app.get('/api/gmail/callback', async (req, res) => {
 app.get('/api/gmail/status', verificarToken, async (req, res) => {
   const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
   res.json({ connected: !!taller?.gmailAccessToken });
+});
+// 4. Desconectar Gmail
+app.delete('/api/gmail/disconnect', verificarToken, async (req, res) => {
+  try {
+    await prisma.taller.update({
+      where: { id: req.tallerId },
+      data: {
+        gmailAccessToken: null,
+        gmailRefreshToken: null
+      }
+    });
+    res.json({ message: 'Gmail desconectado' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al desconectar' });
+  }
 });
 // MARCAR ARCHIVOS COMO IMPRESOS
 app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) => {

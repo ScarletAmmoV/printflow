@@ -42,7 +42,16 @@ export default function Ajustes() {
       setToast('Error al conectar Gmail');
     }
   };
-
+  const handleDisconnectGmail = async () => {
+    try {
+      await api.delete('/gmail/disconnect');
+      setGmailConnected(false);
+      setToast('Gmail desconectado');
+      setTimeout(() => setToast(null), 3000);
+    } catch (err) {
+      setToast('Error al desconectar');
+    }
+  };
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -67,10 +76,15 @@ export default function Ajustes() {
         </h3>
         <p className="text-sm text-gray-500 mb-4">Conectá tu cuenta de Gmail para que PrintFlow lea los diseños que te manden los clientes y los asocie automáticamente a los pedidos.</p>
         
-        {gmailConnected ? (
-          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg">
-            <CheckCircle size={20} />
-            <span className="font-medium">Gmail Conectado</span>
+          {gmailConnected ? (
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg flex-1">
+              <CheckCircle size={20} />
+              <span className="font-medium">Gmail Conectado</span>
+            </div>
+            <button onClick={handleDisconnectGmail} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 text-sm">
+              Desconectar
+            </button>
           </div>
         ) : (
           <button onClick={handleConnectGmail} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2">
