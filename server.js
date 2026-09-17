@@ -179,7 +179,7 @@ setInterval(async () => {
           continue;
         }
 
-                // Buscamos y subimos los archivos adjuntos a Cloudinary
+       // Buscamos y subimos los archivos adjuntos a Cloudinary
         if (email.data.payload.parts) {
           for (const part of email.data.payload.parts) {
             if (part.filename && part.filename.length > 0) {
@@ -469,7 +469,8 @@ app.get('/api/gmail/auth', verificarToken, (req, res) => {
   const url = oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/gmail.readonly', 'https://www.googleapis.com/auth/gmail.modify'],
-    state: req.tallerId.toString() // Le pasamos el ID del taller a Google para que nos lo devuelva
+    state: req.tallerId.toString(),
+    prompt: 'consent' // Obliga a Google a darnos un nuevo Refresh Token siempre
   });
   res.json({ url });
 });
@@ -480,13 +481,19 @@ app.get('/api/gmail/callback', async (req, res) => {
   const tallerId = parseInt(req.query.state);
   
   try {
-    const { tokens } = await oauth2Client.getToken(code);
+        const { tokens } = await oauth2Client.getToken(code);
+    
+    // Preparamos los datos a guardar. Siempre guardamos el Access Token.
+    const dataToUpdate = { gmailAccessToken: tokens.access_token };
+    
+    // Si Google nos mandó un Refresh Token nuevo, lo guardamos. Si no, dejamos el que ya teníamos.
+    if (tokens.refresh_token) {
+      dataToUpdate.gmailRefreshToken = tokens.refresh_token;
+    }
+
     await prisma.taller.update({
       where: { id: tallerId },
-      data: {
-        gmailAccessToken: tokens.access_token,
-        gmailRefreshToken: tokens.refresh_token
-      }
+      data: dataToUpdate
     });
     res.send('<script>window.close();</script><h1>Gmail conectado con éxito. Podés cerrar esta ventana.</h1>');
   } catch (error) {
