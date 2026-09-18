@@ -23,6 +23,10 @@ model Taller {
   // NUEVO: Tokens de Gmail
   gmailAccessToken  String?
   gmailRefreshToken String?
+
+  // NUEVO: Para recuperar contraseña
+  resetPasswordToken String?
+  resetPasswordExpires DateTime?
 }
 
 model Pedido {

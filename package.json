@@ -18,7 +18,8 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "googleapis": "^178.0.0",
-    "jsonwebtoken": "^9.0.3"
+    "jsonwebtoken": "^9.0.3",
+    "nodemailer": "^10.0.10"
   },
   "devDependencies": {
     "prisma": "^5.22.0"

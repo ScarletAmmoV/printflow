@@ -4,6 +4,8 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
+const crypto = require('crypto');
+const nodemailer = require('nodemailer');
 
 const prisma = new PrismaClient();
 const app = express();
@@ -25,6 +27,14 @@ cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
+});
+// Configuración Nodemailer (Para mandar mails)
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
 });
 async function enviarWhatsAppReal(pedido, tallerConfig, mensajePersonalizado = null) {
   try {
@@ -245,14 +255,19 @@ setInterval(async () => {
 // =======================================================
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { nombre, usuario, password } = req.body;
-    if (!nombre || !usuario || !password) return res.status(400).json({ error: 'Todos los campos son obligatorios' });
+    const { nombre, usuario, email, password } = req.body; // Agregamos email
+    if (!nombre || !usuario || !email || !password) return res.status(400).json({ error: 'Todos los campos son obligatorios' }); // Agregamos validación
+
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    const nuevoTaller = await prisma.taller.create({ data: { nombre, usuario, password: hashedPassword } });
+
+    const nuevoTaller = await prisma.taller.create({
+      data: { nombre, usuario, email, password: hashedPassword } // Agregamos email
+    });
+
     res.status(201).json({ message: 'Taller registrado correctamente', tallerId: nuevoTaller.id });
   } catch (error) {
-    if (error.code === 'P2002') return res.status(400).json({ error: 'El nombre de usuario ya está en uso' });
+    if (error.code === 'P2002') return res.status(400).json({ error: 'El usuario o email ya está en uso' });
     res.status(500).json({ error: 'Error interno del servidor' });
   }
 });
@@ -268,6 +283,76 @@ app.post('/api/auth/login', async (req, res) => {
     res.json({ token, taller: { id: taller.id, nombre: taller.nombre, usuario: taller.usuario } });
   } catch (error) {
     res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+// OLVIDÉ MI CONTRASEÑA
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+    const taller = await prisma.taller.findUnique({ where: { email } });
+
+    // Por seguridad, si el mail no existe, igual decimos que se envió (para que no sepan qué mails están registrados)
+    if (!taller) return res.status(200).json({ message: 'Si el correo existe, te enviamos un link.' });
+
+    // Generamos un token único que expira en 1 hora
+    const token = crypto.randomBytes(20).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 1);
+
+    await prisma.taller.update({
+      where: { id: taller.id },
+      data: { resetPasswordToken: token, resetPasswordExpires: expires }
+    });
+
+    // Acordate de cambiar esto por tu URL real de Vercel
+    const resetUrl = `https://printflow-f0sy26quu-print-flow3.vercel.app/reset-password?token=${token}`;
+
+    await transporter.sendMail({
+      from: '"Kova Solutions" <no-reply@kovasolutions.com>',
+      to: taller.email,
+      subject: 'Recuperación de Contraseña - Kova Solutions',
+      html: `<h3>Hola ${taller.nombre}</h3>
+             <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+             <p>Hacé clic en el siguiente enlace para crear una nueva (expira en 1 hora):</p>
+             <a href="${resetUrl}" style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Restablecer Contraseña</a>`
+    });
+
+    res.status(200).json({ message: 'Si el correo existe, te enviamos un link.' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al enviar el mail' });
+  }
+});
+
+// RESETEAR CONTRASEÑA
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    const taller = await prisma.taller.findFirst({
+      where: { 
+        resetPasswordToken: token,
+        resetPasswordExpires: { gt: new Date() } // Que no haya expirado
+      }
+    });
+
+    if (!taller) return res.status(400).json({ error: 'El token es inválido o ha expirado.' });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    await prisma.taller.update({
+      where: { id: taller.id },
+      data: { 
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null
+      }
+    });
+
+    res.status(200).json({ message: 'Contraseña actualizada correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al actualizar la contraseña' });
   }
 });
 
