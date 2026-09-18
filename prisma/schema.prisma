@@ -11,6 +11,7 @@ model Taller {
   id        Int      @id @default(autoincrement())
   nombre    String
   usuario   String   @unique
+  email     String?  @unique
   password  String
   createdAt DateTime @default(now())
   pedidos   Pedido[]
