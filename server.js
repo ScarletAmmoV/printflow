@@ -5,7 +5,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
 const crypto = require('crypto');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
 
 const prisma = new PrismaClient();
 const app = express();
@@ -28,14 +29,9 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-// Configuración Nodemailer (Para mandar mails)
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// Configuración Resend (Para mandar mails)
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 async function enviarWhatsAppReal(pedido, tallerConfig, mensajePersonalizado = null) {
   try {
     // Si el taller no configuró sus credenciales, no podemos enviar
@@ -307,8 +303,8 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     // Acordate de cambiar esto por tu URL real de Vercel
     const resetUrl = `https://printflow-f0sy26quu-print-flow3.vercel.app/reset-password?token=${token}`;
 
-    await transporter.sendMail({
-      from: '"Kova Solutions" <no-reply@kovasolutions.com>',
+        await resend.emails.send({
+      from: 'Kova Solutions <onboarding@resend.dev>',
       to: taller.email,
       subject: 'Recuperación de Contraseña - Kova Solutions',
       html: `<h3>Hola ${taller.nombre}</h3>
