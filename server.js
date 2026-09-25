@@ -301,7 +301,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     });
 
     // Acordate de cambiar esto por tu URL real de Vercel
-    const resetUrl = `https://printflow-f0sy26quu-print-flow3.vercel.app/#/reset-password?token=${token}`;
+   const resetUrl = `https://printflow-phi-virid.vercel.app/#/reset-password?token=${token}`;
 
     await resend.emails.send({
       from: 'Kova Solutions <onboarding@resend.dev>',
