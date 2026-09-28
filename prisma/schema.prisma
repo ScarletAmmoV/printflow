@@ -28,6 +28,9 @@ model Taller {
   // NUEVO: Para recuperar contraseña
   resetPasswordToken String?
   resetPasswordExpires DateTime?
+  
+   // NUEVO: PIN para métricas
+  pinMetricas String?
 }
 
 model Pedido {
