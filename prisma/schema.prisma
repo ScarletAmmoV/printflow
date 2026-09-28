@@ -37,17 +37,18 @@ model Pedido {
   numeroOrden                String
   nombreCliente              String
   apellidoCliente            String
-  emailCliente               String?   // NUEVO: Email del cliente
+  emailCliente               String?
+  dni                        String?   
   telefono                   String
   detalle                    String
   metodoEntrega              String
+  precioTotal                Float?    
   estado                     String    @default("pendiente")
   estadoAnterior             String?
   fechaEntrada               DateTime  @default(now())
   notificacionProgramadaPara DateTime?
   notificacionEnviada        Boolean   @default(false)
   
-  // NUEVO: Gestión de archivos de Gmail
-  archivosAdjuntos           String?   // Lista de links separados por coma
+  archivosAdjuntos           String?
   archivosImpresos           Boolean   @default(false)
 }
