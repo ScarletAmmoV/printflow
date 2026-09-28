@@ -301,7 +301,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     });
 
     // Acordate de cambiar esto por tu URL real de Vercel
-   const resetUrl = `https://printflow-phi-virid.vercel.app/#/reset-password?token=${token}`;
+    const resetUrl = `https://printflow-phi-virid.vercel.app/#/reset-password?token=${token}`;
 
     await resend.emails.send({
       from: 'Kova Solutions <onboarding@resend.dev>',
@@ -359,10 +359,22 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // CREAR PEDIDO
 app.post('/api/pedidos', verificarToken, async (req, res) => {
   try {
-    const { numeroOrden, nombreCliente, apellidoCliente, telefono, detalle, metodoEntrega } = req.body;
+    const { numeroOrden, nombreCliente, apellidoCliente, emailCliente, dni, telefono, detalle, metodoEntrega, precioTotal } = req.body;
     const telefonoLimpio = telefono.replace(/\D/g, '');
     const nuevoPedido = await prisma.pedido.create({
-      data: { tallerId: req.tallerId, numeroOrden, nombreCliente, apellidoCliente, telefono: telefonoLimpio, detalle, metodoEntrega, estado: 'pendiente' }
+      data: {
+        tallerId: req.tallerId,
+        numeroOrden,
+        nombreCliente,
+        apellidoCliente,
+        emailCliente: emailCliente || null,
+        dni: dni || null, // Si viene vacío, lo guarda como null
+        telefono: telefonoLimpio,
+        detalle,
+        metodoEntrega,
+        precioTotal: parseFloat(precioTotal) || 0, // Si viene vacío, lo guarda como 0
+        estado: 'pendiente'
+      }
     });
     res.status(201).json(nuevoPedido);
   } catch (error) {
@@ -420,11 +432,21 @@ app.get('/api/pedidos', verificarToken, async (req, res) => {
 app.put('/api/pedidos/:id', verificarToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { numeroOrden, nombreCliente, apellidoCliente, telefono, detalle, metodoEntrega } = req.body;
+    const { numeroOrden, nombreCliente, apellidoCliente, emailCliente, dni, telefono, detalle, metodoEntrega, precioTotal } = req.body;
     const telefonoLimpio = telefono.replace(/\D/g, '');
     const pedidoActualizado = await prisma.pedido.updateMany({
       where: { id: parseInt(id), tallerId: req.tallerId },
-      data: { numeroOrden, nombreCliente, apellidoCliente, telefono: telefonoLimpio, detalle, metodoEntrega }
+      data: { 
+        numeroOrden, 
+        nombreCliente, 
+        apellidoCliente, 
+        emailCliente: emailCliente || null, 
+        dni: dni || null,
+        telefono: telefonoLimpio, 
+        detalle, 
+        metodoEntrega,
+        precioTotal: parseFloat(precioTotal) || 0
+      }
     });
     if (pedidoActualizado.count === 0) return res.status(404).json({ error: 'Pedido no encontrado' });
     res.json({ message: 'Pedido actualizado correctamente' });

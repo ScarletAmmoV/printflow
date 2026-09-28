@@ -3,7 +3,7 @@ import api from './api';
 
 export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
   const [formData, setFormData] = useState({
-    numeroOrden: '', nombreCliente: '', apellidoCliente: '', telefono: '', detalle: '', metodoEntrega: 'retiro'
+    numeroOrden: '', nombreCliente: '', apellidoCliente: '', telefono: '', detalle: '', metodoEntrega: 'retiro', dni: '', precioTotal: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -45,19 +45,64 @@ export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">N° de Orden</label><input type="text" name="numeroOrden" value={formData.numeroOrden} onChange={handleChange} required className={inputClass} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label><input type="text" name="telefono" value={formData.telefono} onChange={handleChange} required className={inputClass} /></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">N° de Orden</label>
+                <input type="text" name="numeroOrden" value={formData.numeroOrden} onChange={handleChange} required className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Teléfono</label>
+                <input type="text" name="telefono" value={formData.telefono} onChange={handleChange} required className={inputClass} />
+              </div>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
-              <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label><input type="text" name="nombreCliente" value={formData.nombreCliente} onChange={handleChange} required className={inputClass} /></div>
-              <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label><input type="text" name="apellidoCliente" value={formData.apellidoCliente} onChange={handleChange} required className={inputClass} /></div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre</label>
+                <input type="text" name="nombreCliente" value={formData.nombreCliente} onChange={handleChange} required className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Apellido</label>
+                <input type="text" name="apellidoCliente" value={formData.apellidoCliente} onChange={handleChange} required className={inputClass} />
+              </div>
             </div>
-            <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Detalle</label><textarea name="detalle" value={formData.detalle} onChange={handleChange} required rows="3" className={inputClass}></textarea></div>
-            <div><label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Entrega</label><select name="metodoEntrega" value={formData.metodoEntrega} onChange={handleChange} className={inputClass}><option value="retiro">Retiro</option><option value="envio">Envío</option></select></div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Email (Opcional)</label>
+                <input type="email" name="emailCliente" value={formData.emailCliente} onChange={handleChange} className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">DNI (Opcional)</label>
+                <input type="text" name="dni" value={formData.dni} onChange={handleChange} className={inputClass} />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Detalle del Pedido</label>
+              <textarea name="detalle" value={formData.detalle} onChange={handleChange} required rows="3" className={inputClass}></textarea>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Método de Entrega</label>
+                <select name="metodoEntrega" value={formData.metodoEntrega} onChange={handleChange} className={inputClass}>
+                  <option value="retiro">Retiro</option>
+                  <option value="envio">Envío</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Precio Total ($)</label>
+                <input type="number" step="0.01" name="precioTotal" value={formData.precioTotal || ''} onChange={handleChange} placeholder="0.00" className={inputClass} />
+              </div>
+            </div>
+
             {error && <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm">{error}</div>}
+
             <div className="flex gap-4 pt-4">
               <button type="button" onClick={onClose} className="flex-1 bg-gray-200 dark:bg-gray-600 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancelar</button>
-              <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400">{loading ? 'Guardando...' : (pedidoEditar ? 'Guardar' : 'Crear')}</button>
+              <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400">
+                {loading ? 'Guardando...' : (pedidoEditar ? 'Guardar' : 'Crear')}
+              </button>
             </div>
           </form>
         </div>
