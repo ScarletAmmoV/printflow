@@ -3,11 +3,12 @@ import api from './api';
 import { Save, Loader2, Mail, CheckCircle } from 'lucide-react';
 
 export default function Ajustes() {
-  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '' });
+  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '' });
   const [gmailConnected, setGmailConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [pinInput, setPinInput] = useState(''); // NUEVO: Para escribir el PIN
 
   useEffect(() => {
     const fetchAjustes = async () => {
@@ -117,7 +118,42 @@ export default function Ajustes() {
             </ul>
             <textarea value={datos.plantillaMensaje || ''} onChange={(e) => setDatos({...datos, plantillaMensaje: e.target.value})} rows="4" className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white"></textarea>
           </div>
-
+        {/* SECCIÓN PIN DE MÉTRICAS */}
+        <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+            <Lock size={20} className="text-indigo-500" /> PIN de Métricas
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">Configurá un PIN de 4 dígitos para proteger la visualización de las métricas de tu negocio. Dejá vacío para desactivarlo.</p>
+          
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
+              <input 
+                type="text" 
+                maxLength="4" 
+                value={pinInput !== '' ? pinInput : (datos.pinMetricas || '')} 
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
+                placeholder="Ej: 1234" 
+                className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+              />
+            </div>
+            <button 
+              type="button" 
+              onClick={async () => {
+                try {
+                  await api.put('/ajustes/pin', { pin: pinInput });
+                  setDatos({ ...datos, pinMetricas: pinInput });
+                  setPinInput('');
+                  setToast('PIN guardado con éxito');
+                  setTimeout(() => setToast(null), 3000);
+                } catch (err) { setToast('Error al guardar PIN'); }
+              }} 
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"
+            >
+              Guardar PIN
+            </button>
+          </div>
+        </div>
           <div className="flex justify-end">
             <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2">
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}

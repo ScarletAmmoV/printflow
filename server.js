@@ -530,12 +530,19 @@ app.patch('/api/pedidos/:id/restaurar', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al restaurar el pedido' });
   }
 });
+
 // OBTENER AJUSTES
 app.get('/api/ajustes', verificarToken, async (req, res) => {
   try {
     const taller = await prisma.taller.findUnique({
       where: { id: req.tallerId },
-      select: { nombre: true, metaToken: true, metaPhoneId: true, plantillaMensaje: true }
+      select: { 
+        nombre: true, 
+        metaToken: true, 
+        metaPhoneId: true, 
+        plantillaMensaje: true,
+        pinMetricas: true // NUEVO
+      }
     });
     res.json(taller);
   } catch (error) {
@@ -554,6 +561,41 @@ app.put('/api/ajustes', verificarToken, async (req, res) => {
     res.json({ message: 'Ajustes guardados correctamente' });
   } catch (error) {
     res.status(500).json({ error: 'Error al guardar ajustes' });
+  }
+});
+
+// GUARDAR PIN DE MÉTRICAS
+app.put('/api/ajustes/pin', verificarToken, async (req, res) => {
+  try {
+    const { pin } = req.body;
+    // Si el pin viene vacío, lo guardamos como null (para desactivarlo)
+    await prisma.taller.update({
+      where: { id: req.tallerId },
+      data: { pinMetricas: pin || null }
+    });
+    res.json({ message: 'PIN actualizado correctamente' });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al guardar el PIN' });
+  }
+});
+
+// VERIFICAR PIN DE MÉTRICAS
+app.post('/api/ajustes/verificar-pin', verificarToken, async (req, res) => {
+  try {
+    const { pin } = req.body;
+    const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
+    
+    if (!taller.pinMetricas) {
+      return res.json({ success: true }); // Si no hay PIN, pasa derecho
+    }
+    
+    if (taller.pinMetricas === pin) {
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'PIN incorrecto' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error al verificar el PIN' });
   }
 });
 // =======================================================
