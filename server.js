@@ -705,6 +705,32 @@ app.post('/api/pedidos/eliminar-masivo', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al eliminar en masa' });
   }
 });
+// OBTENER MÉTRICAS FINANCIERAS
+app.get('/api/pedidos/metricas', verificarToken, async (req, res) => {
+  try {
+    // Buscamos todos los pedidos que no estén eliminados
+    const pedidos = await prisma.pedido.findMany({
+      where: { tallerId: req.tallerId, estado: { not: 'eliminado' } }
+    });
+
+    const totalPedidos = pedidos.length;
+    const totalIngresos = pedidos.reduce((sum, p) => sum + (p.precioTotal || 0), 0);
+    const ticketPromedio = totalPedidos > 0 ? totalIngresos / totalPedidos : 0;
+
+    // Contamos clientes únicos por teléfono
+    const telefonosUnicos = new Set(pedidos.map(p => p.telefono));
+    const totalClientes = telefonosUnicos.size;
+
+    res.json({
+      totalPedidos,
+      totalIngresos: totalIngresos.toFixed(2),
+      ticketPromedio: ticketPromedio.toFixed(2),
+      totalClientes
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al obtener métricas' });
+  }
+});
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
   try {

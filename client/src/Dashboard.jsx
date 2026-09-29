@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import api from './api';
 import OrderFormModal from './OrderFormModal';
 import Ajustes from './Ajustes';
+import Metricas from './Metricas';
 import { 
   MoreVertical, Pencil, Undo2, Zap, Trash2, RotateCcw, MessageCircle, 
   ChevronLeft, ChevronRight, Search, Calendar, PlusCircle, CheckCircle, 
-  Clock, Layers, Moon, Sun, X, Settings, Paperclip
+  Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock
 } from 'lucide-react';
+
+
+
 
 // Cronómetro
 function CountdownTimer({ targetDate }) {
@@ -72,6 +76,9 @@ export default function Dashboard() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [toast, setToast] = useState(null);
+  const [showMetricas, setShowMetricas] = useState(false);
+  const [pinInput, setPinInput] = useState('');
+  const [pinError, setPinError] = useState('');
   
   // Simplificamos el estado del menú: solo guardamos el ID
     const [openMenu, setOpenMenu] = useState({ id: null, direction: 'down' });
@@ -198,6 +205,7 @@ export default function Dashboard() {
     { id: 'pago_pendiente', label: 'Esperando Pago', count: counts.pago_pendiente, icon: Layers },
     { id: 'finalizado', label: 'Finalizados', count: counts.finalizados, icon: CheckCircle },
     { id: 'eliminado', label: 'Papelera', count: counts.eliminados, icon: Trash2 },
+    { id: 'metricas', label: 'Métricas', count: null, icon: BarChart },
     { id: 'ajustes', label: 'Ajustes', count: null, icon: Settings },
   ];
 
@@ -254,8 +262,37 @@ export default function Dashboard() {
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         
-        {tab === 'ajustes' ? (
-          <Ajustes />
+             {tab === 'metricas' ? (
+          showMetricas ? (
+            <Metricas />
+          ) : (
+            <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center mt-20">
+              <Lock size={40} className="mx-auto text-indigo-500 mb-4" />
+              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Acceso Restringido</h2>
+              <p className="text-sm text-gray-500 mb-4">Ingresá el PIN de métricas para continuar.</p>
+              <input 
+                type="password" 
+                maxLength="4" 
+                value={pinInput} 
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
+                className="mt-1 block w-full px-3 py-2 border rounded-md text-center tracking-widest text-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                placeholder="****"
+              />
+              {pinError && <p className="text-red-500 text-sm mt-2">{pinError}</p>}
+              <button 
+                onClick={async () => {
+                  try {
+                    await api.post('/ajustes/verificar-pin', { pin: pinInput });
+                    setShowMetricas(true);
+                    setPinError('');
+                  } catch (err) { setPinError('PIN incorrecto'); }
+                }} 
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full mt-4"
+              >
+                Desbloquear
+              </button>
+            </div>
+          )
         ) : (
         <>
         
