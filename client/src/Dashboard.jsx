@@ -263,44 +263,13 @@ export default function Dashboard() {
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         
-        {tab === 'ajustes' ? (
+       {tab === 'ajustes' ? (
           <Ajustes />
         ) : tab === 'metricas' ? (
-          (showMetricas || Date.now() < pinExpiry) ? (
-            <Metricas />
-          ) : (
-            <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center mt-20">
-              <Lock size={40} className="mx-auto text-indigo-500 mb-4" />
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Acceso Restringido</h2>
-              <p className="text-sm text-gray-500 mb-4">Ingresa el PIN de métricas para continuar.</p>
-              <input 
-                type="password" 
-                maxLength="4" 
-                value={pinInput} 
-                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
-                className="mt-1 block w-full px-3 py-2 border rounded-md text-center tracking-widest text-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
-                placeholder="****"
-              />
-              {pinError && <p className="text-red-500 text-sm mt-2">{pinError}</p>}
-              <button 
-                onClick={async () => {
-                  try {
-                    await api.post('/ajustes/verificar-pin', { pin: pinInput });
-                    setShowMetricas(true);
-                    setPinExpiry(Date.now() + 30000); // Expira en 30 segundos
-                    setPinError('');
-                    setPinInput('');
-                  } catch (err) { setPinError('PIN incorrecto'); }
-                }} 
-                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full mt-4"
-              >
-                Desbloquear
-              </button>
-            </div>
-          )
+          <Metricas />
         ) : (
         <>
-        
+
         {/* MÉTRICAS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">

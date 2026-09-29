@@ -153,55 +153,13 @@ export default function Ajustes() {
         </form>
       </div>
 
-      {/* SECCIÓN PIN DE MÉTRICAS */}
-      <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <Lock size={20} className="text-indigo-500" /> PIN de Métricas
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">Protege la visualización de las métricas.</p>
-        
-        {datos.pinMetricas ? (
-          <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg text-sm flex items-center gap-2">
-              <CheckCircle size={18} /> PIN activado.
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo PIN (para cambiarlo)</label>
-                <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Dejar vacío para no cambiar" className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-              </div>
-              <button type="button" onClick={handleSavePin} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 sm:mt-6">Actualizar PIN</button>
-            </div>
-
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Desactivar PIN (Ingresa el PIN actual)</label>
-                <div className="flex gap-2 mt-1">
-                  <input type="password" maxLength="4" value={pinDesactivar} onChange={(e) => setPinDesactivar(e.target.value.replace(/\D/g, ''))} className="block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="****" />
-                  <button type="button" onClick={handleDesactivarPin} className="bg-gray-200 dark:bg-gray-600 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 whitespace-nowrap">Desactivar</button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Olvidé mi PIN (Ingresa tu contraseña)</label>
-                <div className="flex gap-2 mt-1">
-                  <input type="password" value={passwordReset} onChange={(e) => setPasswordReset(e.target.value)} className="block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="Tu contraseña de inicio" />
-                  <button type="button" onClick={handleResetPin} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 whitespace-nowrap">Restablecer</button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {tab === 'ajustes' ? (
+          <Ajustes />
+        ) : tab === 'metricas' ? (
+          <Metricas />
         ) : (
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
-              <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Ej: 1234" className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-            </div>
-            <button type="button" onClick={handleSavePin} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-0.5">Activar PIN</button>
-          </div>
-        )}
-      </div>
+        <>
+        {/* MÉTRICAS */}
 
       {toast && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-md text-sm">{toast}</div>}
     </div>
