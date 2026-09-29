@@ -135,28 +135,98 @@ export default function Ajustes() {
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
           <Lock size={20} className="text-indigo-500" /> PIN de Métricas
         </h3>
-        <p className="text-sm text-gray-500 mb-4">Configurá un PIN de 4 dígitos para proteger las métricas. Dejá vacío para desactivarlo.</p>
+        <p className="text-sm text-gray-500 mb-4">Protege la visualización de las métricas. Si ya tienes un PIN, puedes desactivarlo o cambiarlo.</p>
         
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
-            <input 
-              type="text" 
-              maxLength="4" 
-              value={pinInput !== '' ? pinInput : (datos.pinMetricas || '')} 
-              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
-              placeholder="Ej: 1234" 
-              className={inputClass} 
-            />
+        {datos.pinMetricas ? (
+          // Si ya hay un PIN configurado
+          <div className="space-y-4">
+            <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg text-sm flex items-center gap-2">
+              <CheckCircle size={18} /> PIN activado.
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo PIN (para cambiarlo)</label>
+                <input 
+                  type="text" 
+                  maxLength="4" 
+                  value={pinInput} 
+                  onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
+                  placeholder="Dejar vacío para no cambiar" 
+                  className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+                />
+              </div>
+              <button 
+                type="button" 
+                onClick={handleSavePin} 
+                className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-0.5 sm:mt-6"
+              >
+                Actualizar PIN
+              </button>
+            </div>
+
+            <div className="flex gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+              <button 
+                type="button" 
+                onClick={async () => {
+                  const pin = prompt('Para desactivar el PIN, ingresa el actual:');
+                  if (!pin) return;
+                  try {
+                    await api.post('/ajustes/desactivar-pin', { pin });
+                    setDatos({ ...datos, pinMetricas: null });
+                    setToast('PIN desactivado');
+                    setTimeout(() => setToast(null), 3000);
+                  } catch (err) { 
+                    alert(err.response?.data?.error || 'Error al desactivar'); 
+                  }
+                }} 
+                className="flex-1 bg-gray-200 dark:bg-gray-600 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 text-sm"
+              >
+                Desactivar PIN
+              </button>
+              <button 
+                type="button" 
+                onClick={async () => {
+                  const pass = prompt('Olvidaste tu PIN. Ingresa tu contraseña de inicio de sesión para restablecerlo:');
+                  if (!pass) return;
+                  try {
+                    await api.post('/ajustes/reset-pin', { password: pass });
+                    setDatos({ ...datos, pinMetricas: null });
+                    setToast('PIN restablecido. Puedes configurar uno nuevo.');
+                    setTimeout(() => setToast(null), 3000);
+                  } catch (err) { 
+                    alert(err.response?.data?.error || 'Error al restablecer'); 
+                  }
+                }} 
+                className="flex-1 bg-red-100 text-red-600 py-2 rounded-lg hover:bg-red-200 text-sm"
+              >
+                Olvidé el PIN
+              </button>
+            </div>
           </div>
-          <button 
-            type="button" 
-            onClick={handleSavePin} 
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-0.5"
-          >
-            Guardar PIN
-          </button>
-        </div>
+        ) : (
+          // Si no hay PIN configurado
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
+              <input 
+                type="text" 
+                maxLength="4" 
+                value={pinInput} 
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} 
+                placeholder="Ej: 1234" 
+                className="mt-1 block w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" 
+              />
+            </div>
+            <button 
+              type="button" 
+              onClick={handleSavePin} 
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-0.5"
+            >
+              Activar PIN
+            </button>
+          </div>
+        )}
       </div>
 
       {toast && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-md text-sm">{toast}</div>}

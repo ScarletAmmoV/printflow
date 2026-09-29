@@ -585,10 +585,7 @@ app.post('/api/ajustes/verificar-pin', verificarToken, async (req, res) => {
     const { pin } = req.body;
     const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
     
-    if (!taller.pinMetricas) {
-      return res.json({ success: true }); // Si no hay PIN, pasa derecho
-    }
-    
+    if (!taller.pinMetricas) return res.json({ success: true });
     if (taller.pinMetricas === pin) {
       res.json({ success: true });
     } else {
@@ -596,6 +593,48 @@ app.post('/api/ajustes/verificar-pin', verificarToken, async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: 'Error al verificar el PIN' });
+  }
+});
+
+// DESACTIVAR PIN (Pidiendo el PIN actual)
+app.post('/api/ajustes/desactivar-pin', verificarToken, async (req, res) => {
+  try {
+    const { pin } = req.body;
+    const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
+
+    if (!taller.pinMetricas) return res.json({ success: true, message: 'No había PIN configurado' });
+    
+    if (taller.pinMetricas === pin) {
+      await prisma.taller.update({
+        where: { id: req.tallerId },
+        data: { pinMetricas: null }
+      });
+      res.json({ success: true });
+    } else {
+      res.status(400).json({ error: 'PIN incorrecto' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Error al desactivar el PIN' });
+  }
+});
+
+// RESTABLECER PIN OLVIDADO (Pidiendo contraseña de la cuenta)
+app.post('/api/ajustes/reset-pin', verificarToken, async (req, res) => {
+  try {
+    const { password } = req.body;
+    const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
+
+    const passwordValido = await bcrypt.compare(password, taller.password);
+    if (!passwordValido) return res.status(400).json({ error: 'Contraseña incorrecta' });
+
+    await prisma.taller.update({
+      where: { id: req.tallerId },
+      data: { pinMetricas: null }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Error al restablecer el PIN' });
   }
 });
 // =======================================================

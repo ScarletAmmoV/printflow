@@ -79,6 +79,7 @@ export default function Dashboard() {
   const [showMetricas, setShowMetricas] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
+  const [pinExpiry, setPinExpiry] = useState(0); // NUEVO: Timestamp de expiración
   
   // Simplificamos el estado del menú: solo guardamos el ID
     const [openMenu, setOpenMenu] = useState({ id: null, direction: 'down' });
@@ -262,14 +263,16 @@ export default function Dashboard() {
 
       <main className="flex-1 p-4 md:p-8 overflow-y-auto">
         
-             {tab === 'metricas' ? (
-          showMetricas ? (
+        {tab === 'ajustes' ? (
+          <Ajustes />
+        ) : tab === 'metricas' ? (
+          (showMetricas || Date.now() < pinExpiry) ? (
             <Metricas />
           ) : (
             <div className="max-w-md mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 text-center mt-20">
               <Lock size={40} className="mx-auto text-indigo-500 mb-4" />
               <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">Acceso Restringido</h2>
-              <p className="text-sm text-gray-500 mb-4">Ingresá el PIN de métricas para continuar.</p>
+              <p className="text-sm text-gray-500 mb-4">Ingresa el PIN de métricas para continuar.</p>
               <input 
                 type="password" 
                 maxLength="4" 
@@ -284,7 +287,9 @@ export default function Dashboard() {
                   try {
                     await api.post('/ajustes/verificar-pin', { pin: pinInput });
                     setShowMetricas(true);
+                    setPinExpiry(Date.now() + 30000); // Expira en 30 segundos
                     setPinError('');
+                    setPinInput('');
                   } catch (err) { setPinError('PIN incorrecto'); }
                 }} 
                 className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full mt-4"
