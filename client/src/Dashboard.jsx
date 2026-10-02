@@ -68,6 +68,7 @@ export default function Dashboard() {
   const [counts, setCounts] = useState({ pendientes: 0, finalizados: 0, eliminados: 0, finalizadosSemana: 0, finalizadosHoy: 0, pago_pendiente: 0 });
   const [selectedIds, setSelectedIds] = useState([]);
   const [showCheckboxes, setShowCheckboxes] = useState(false);
+  const [expandedRows, setExpandedRows] = useState([]);
   const [search, setSearch] = useState('');
   const [searchFecha, setSearchFecha] = useState('');
   const [loading, setLoading] = useState(true);
@@ -135,6 +136,9 @@ export default function Dashboard() {
     const espacioAbajo = window.innerHeight - rect.bottom;
     const direction = espacioAbajo > 200 ? 'down' : 'up';
     setOpenMenu({ id, direction });
+    const toggleRowExpand = (id) => {
+    setExpandedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+  };
   };
 
   const handleAccion = async (id, accion) => {
@@ -376,10 +380,16 @@ export default function Dashboard() {
                         </a>
                       </div>
                     </td>
-                    <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
-                      <p className="text-gray-500 dark:text-gray-400 truncate">{p.detalle}</p>
+                      <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
+                      <p 
+                        className={`text-gray-500 dark:text-gray-400 cursor-pointer ${!expandedRows.includes(p.id) ? 'truncate' : 'whitespace-normal break-words'}`} 
+                        title={p.detalle}
+                        onClick={() => toggleRowExpand(p.id)}
+                      >
+                        {p.detalle}
+                      </p>
                     </td>
-                                        <td className="px-4 py-3 text-center">
+                    <td className="px-4 py-3 text-center">
                       {p.archivosAdjuntos ? (
                         <div className="flex items-center justify-center gap-2">
                           {p.archivosAdjuntos.split(',').map((url, index) => (

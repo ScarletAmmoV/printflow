@@ -770,6 +770,76 @@ app.get('/api/pedidos/metricas', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al obtener métricas' });
   }
 });
+// MÉTRICAS AVANZADAS (Productos y Edades)
+app.get('/api/pedidos/metricas-avanzadas', verificarToken, async (req, res) => {
+  try {
+    const pedidos = await prisma.pedido.findMany({
+      where: { tallerId: req.tallerId, estado: { not: 'eliminado' } }
+    });
+
+    // 1. PRODUCTOS CALIENTES
+    const conteoProductos = {};
+    pedidos.forEach(p => {
+      if (!p.detalle) return;
+      
+      // Separamos por saltos de línea o comas, por si hay múltiples productos en un pedido
+      const lineas = p.detalle.split(/[\n,]+/);
+      
+      lineas.forEach(linea => {
+        const lineaLimpia = linea.trim();
+        if (!lineaLimpia) return;
+
+        // Buscamos si tiene un "x" seguido de un número (ej: "x2", "x100")
+        const match = lineaLimpia.match(/x\s*(\d+)/i);
+        let cantidad = 1;
+        let nombreProducto = lineaLimpia;
+
+        if (match) {
+          cantidad = parseInt(match[1], 10);
+          // Sacamos el "x2" del nombre del producto para que quede limpio
+          nombreProducto = lineaLimpia.replace(/x\s*\d+/i, '').trim();
+        }
+
+        // Sumamos la cantidad
+        if (conteoProductos[nombreProducto]) {
+          conteoProductos[nombreProducto] += cantidad;
+        } else {
+          conteoProductos[nombreProducto] = cantidad;
+        }
+      });
+    });
+
+    // Convertimos a un array y ordenamos de mayor a menor
+    const productosCalientes = Object.entries(conteoProductos)
+      .map(([nombre, total]) => ({ nombre, total }))
+      .sort((a, b) => b.total - a.total)
+      .slice(0, 5); // Top 5
+
+    // 2. EDAD POR DNI (Agrupación simple)
+    // Nota: Es una aproximación basada en los millones del DNI (ej: 20M-30M)
+    const rangos = { '18-25': 0, '26-35': 0, '36-50': 0, '50+': 0, 'Sin DNI': 0 };
+
+    pedidos.forEach(p => {
+      if (!p.dni) {
+        rangos['Sin DNI']++;
+        return;
+      }
+      const numDni = parseInt(p.dni.replace(/\D/g, ''), 10);
+      if (isNaN(numDni)) return;
+
+      // Aproximación para Argentina (ej: >40M son los más jóvenes)
+      if (numDni > 40000000) rangos['18-25']++;
+      else if (numDni > 30000000) rangos['26-35']++;
+      else if (numDni > 20000000) rangos['36-50']++;
+      else rangos['50+']++;
+    });
+
+    res.json({ productosCalientes, rangosEdad: rangos });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error al obtener métricas avanzadas' });
+  }
+});
 // CONTAR PEDIDOS
 app.get('/api/pedidos/contar', verificarToken, async (req, res) => {
   try {
