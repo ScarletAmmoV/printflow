@@ -3,7 +3,7 @@ import api from './api';
 
 export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
   const [formData, setFormData] = useState({
-    numeroOrden: '', nombreCliente: '', apellidoCliente: '', telefono: '', detalle: '', metodoEntrega: 'retiro', dni: '', precioTotal: ''
+    numeroOrden: '', nombreCliente: '', apellidoCliente: '', emailCliente: '', dni: '', telefono: '', detalle: '', metodoEntrega: 'retiro', precioTotal: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -11,9 +11,15 @@ export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
   useEffect(() => {
     if (pedidoEditar) {
       setFormData({
-        numeroOrden: pedidoEditar.numeroOrden || '', nombreCliente: pedidoEditar.nombreCliente || '',
-        apellidoCliente: pedidoEditar.apellidoCliente || '', telefono: pedidoEditar.telefono || '',
-        detalle: pedidoEditar.detalle || '', metodoEntrega: pedidoEditar.metodoEntrega || 'retiro'
+        numeroOrden: pedidoEditar.numeroOrden || '',
+        nombreCliente: pedidoEditar.nombreCliente || '',
+        apellidoCliente: pedidoEditar.apellidoCliente || '',
+        emailCliente: pedidoEditar.emailCliente || '',
+        dni: pedidoEditar.dni || '',
+        telefono: pedidoEditar.telefono || '',
+        detalle: pedidoEditar.detalle || '',
+        metodoEntrega: pedidoEditar.metodoEntrega || 'retiro',
+        precioTotal: pedidoEditar.precioTotal || ''
       });
     }
   }, [pedidoEditar]);
@@ -33,14 +39,14 @@ export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
     finally { setLoading(false); }
   };
 
-  const inputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white";
+  const inputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#0D2D53] focus:border-[#0D2D53] dark:bg-[#17191C] dark:text-white";
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-[#17191C] rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white">{pedidoEditar ? 'Editar Pedido' : 'Nuevo Pedido'}</h2>
+            <h2 className="text-xl font-bold text-[#0A0D12] dark:text-white">{pedidoEditar ? 'Editar Pedido' : 'Nuevo Pedido'}</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl">&times;</button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -100,7 +106,7 @@ export default function OrderFormModal({ onClose, onSaved, pedidoEditar }) {
 
             <div className="flex gap-4 pt-4">
               <button type="button" onClick={onClose} className="flex-1 bg-gray-200 dark:bg-gray-600 dark:text-white py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500">Cancelar</button>
-              <button type="submit" disabled={loading} className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 disabled:bg-indigo-400">
+              <button type="submit" disabled={loading} className="flex-1 bg-[#0D2D53] text-white py-2 rounded-lg hover:opacity-90 disabled:opacity-50">
                 {loading ? 'Guardando...' : (pedidoEditar ? 'Guardar' : 'Crear')}
               </button>
             </div>

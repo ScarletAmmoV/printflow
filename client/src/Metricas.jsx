@@ -22,29 +22,29 @@ export default function Metricas() {
     fetchAll();
   }, []);
 
-  if (loading || !datos || !avanzado) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>;
+  if (loading || !datos || !avanzado) return <div className="flex justify-center p-8"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0D2D53]"></div></div>;
 
   const cards = [
     { titulo: 'Ingresos Totales', valor: `$${datos.totalIngresos}`, icon: DollarSign, color: 'text-green-600 dark:text-green-400' },
     { titulo: 'Ticket Promedio', valor: `$${datos.ticketPromedio}`, icon: TrendingUp, color: 'text-blue-600 dark:text-blue-400' },
-    { titulo: 'Total Pedidos', valor: datos.totalPedidos, icon: ShoppingBag, color: 'text-indigo-600 dark:text-indigo-400' },
+    { titulo: 'Total Pedidos', valor: datos.totalPedidos, icon: ShoppingBag, color: 'text-[#0D2D53] dark:text-blue-300' },
     { titulo: 'Clientes Únicos', valor: datos.totalClientes, icon: Users, color: 'text-purple-600 dark:text-purple-400' },
   ];
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Métricas del Negocio</h2>
+      <h2 className="text-2xl font-bold text-[#0A0D12] dark:text-white mb-6">Métricas del Negocio</h2>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((card, i) => {
           const Icon = card.icon;
           return (
-            <div key={i} className="bg-white dark:bg-gray-800 p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+            <div key={i} className="bg-white dark:bg-[#17191C] p-5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
               <div className="flex justify-between items-center mb-3">
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{card.titulo}</p>
                 <Icon size={20} className={card.color} />
               </div>
-              <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{card.valor}</p>
+              <p className="text-3xl font-bold text-[#0A0D12] dark:text-gray-100">{card.valor}</p>
             </div>
           );
         })}
@@ -52,7 +52,7 @@ export default function Metricas() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* PRODUCTOS CALIENTES */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-[#17191C] p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
             <Flame size={20} className="text-orange-500" /> Productos más vendidos
           </h3>
@@ -78,7 +78,7 @@ export default function Metricas() {
         </div>
 
         {/* EDADES POR DNI */}
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-[#17191C] p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
           <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
             <Calendar size={20} className="text-blue-500" /> Rango de edad de clientes
           </h3>
