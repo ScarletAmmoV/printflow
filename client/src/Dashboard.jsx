@@ -349,46 +349,46 @@ export default function Dashboard() {
                   <th className="px-4 py-3 text-right relative">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
-                {pedidos.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                     <td className="px-4 py-3 text-center">
-                      {showCheckboxes && (
-                        <div 
-                          className="flex justify-center items-center w-10 h-10 mx-auto rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" 
-                          onClick={() => toggleSelect(p.id)}
-                        >
-                          <input 
-                            type="checkbox" 
-                            checked={selectedIds.includes(p.id)}
-                            onChange={() => toggleSelect(p.id)}
-                            className="w-4 h-4 rounded cursor-pointer pointer-events-none"
-                          />
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                  {pedidos.map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                       <td className="px-4 py-3 text-center">
+                        {showCheckboxes && (
+                          <div 
+                            className="flex justify-center items-center w-10 h-10 mx-auto rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700" 
+                            onClick={() => toggleSelect(p.id)}
+                          >
+                            <input 
+                              type="checkbox" 
+                              checked={selectedIds.includes(p.id)}
+                              onChange={() => toggleSelect(p.id)}
+                              className="w-4 h-4 rounded cursor-pointer pointer-events-none"
+                            />
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-bold text-gray-800 dark:text-gray-100">#{highlightText(p.numeroOrden, search)}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{formatFecha(p.fechaEntrada)} {new Date(p.fechaEntrada).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-700 dark:text-gray-200">{highlightText(`${p.nombreCliente} ${p.apellidoCliente}`, search)}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
+                          <span>{p.telefono}</span>
+                          <a href={`https://wa.me/${p.telefono}`} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-600 inline-flex items-center" title="Abrir chat de WhatsApp">
+                            <MessageCircle size={14} />
+                          </a>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-bold text-gray-800 dark:text-gray-100">#{highlightText(p.numeroOrden, search)}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{formatFecha(p.fechaEntrada)} {new Date(p.fechaEntrada).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-700 dark:text-gray-200">{highlightText(`${p.nombreCliente} ${p.apellidoCliente}`, search)}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-                        <span>{p.telefono}</span>
-                        <a href={`https://wa.me/${p.telefono}`} target="_blank" rel="noreferrer" className="text-green-500 hover:text-green-600 inline-flex items-center" title="Abrir chat de WhatsApp">
-                          <MessageCircle size={14} />
-                        </a>
-                      </div>
-                    </td>
-                      <td className="px-4 py-3 hidden lg:table-cell max-w-xs">
-                      <p 
-                        className={`text-gray-500 dark:text-gray-400 cursor-pointer ${!expandedRows.includes(p.id) ? 'truncate' : 'whitespace-normal break-words'}`} 
-                        title={p.detalle}
-                        onClick={() => toggleRowExpand(p.id)}
-                      >
-                        {p.detalle}
-                      </p>
-                    </td>
+                      </td> {/* <--- ACÁ ESTABA EL ERROR, FALTABA ESTA ETIQUETA */}
+                      <td className={`px-4 py-3 hidden lg:table-cell ${expandedRows.includes(p.id) ? 'max-w-lg' : 'max-w-xs'}`}>
+                        <p 
+                          className={`text-gray-500 dark:text-gray-400 cursor-pointer ${!expandedRows.includes(p.id) ? 'truncate' : 'whitespace-normal break-words'}`} 
+                          title={p.detalle}
+                          onClick={() => toggleRowExpand(p.id)}
+                        >
+                          {p.detalle}
+                        </p>
+                      </td>
                     <td className="px-4 py-3 text-center">
                       {p.archivosAdjuntos ? (
                         <div className="flex items-center justify-center gap-2">

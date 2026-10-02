@@ -61,9 +61,16 @@ export default function Metricas() {
           ) : (
             <ul className="space-y-3">
               {avanzado.productosCalientes.map((prod, i) => (
-                <li key={i} className="flex justify-between items-center pb-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{prod.nombre}</span>
-                  <span className="text-sm font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded">{prod.total} und.</span>
+                <li key={i} className="flex justify-between items-center gap-4 pb-2 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                  <span 
+                    title={prod.nombre} 
+                    className="text-sm font-medium text-gray-600 dark:text-gray-300 truncate flex-1 min-w-0"
+                  >
+                    {prod.nombre}
+                  </span>
+                  <span className="text-sm font-bold bg-orange-100 text-orange-600 px-2 py-1 rounded whitespace-nowrap">
+                    {prod.total} und.
+                  </span>
                 </li>
               ))}
             </ul>
