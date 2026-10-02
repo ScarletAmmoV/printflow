@@ -93,19 +93,19 @@ export default function Ajustes() {
     finally { setSaving(false); }
   };
 
-  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-indigo-600" /></div>;
+  if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-[#0D2D53]" /></div>;
 
-  const inputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white";
+  const inputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#0D2D53] focus:border-[#0D2D53] dark:bg-[#17191C] dark:text-white";
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-8">
+    <div className="max-w-2xl mx-auto bg-white dark:bg-[#17191C] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-8">
       
       {/* SECCIÓN GMAIL */}
       <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
           <Mail size={20} className="text-red-500" /> Conexión de Gmail
         </h3>
-        <p className="text-sm text-gray-500 mb-4">Conecta tu cuenta para que PrintFlow lea los diseños automáticamente.</p>
+        <p className="text-sm text-gray-500 mb-4">Conecta tu cuenta para que lea los diseños automáticamente.</p>
         {gmailConnected ? (
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg flex-1">
@@ -146,7 +146,7 @@ export default function Ajustes() {
           </div>
 
           <div className="flex justify-end">
-            <button type="submit" disabled={saving} className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 flex items-center gap-2">
+            <button type="submit" disabled={saving} className="bg-[#0D2D53] text-white px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
               {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
               {saving ? 'Guardando...' : 'Guardar Cambios'}
             </button>
@@ -157,7 +157,7 @@ export default function Ajustes() {
       {/* SECCIÓN PIN DE MÉTRICAS */}
       <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <Lock size={20} className="text-indigo-500" /> PIN de Métricas
+          <Lock size={20} className="text-[#0D2D53]" /> PIN de Métricas
         </h3>
         <p className="text-sm text-gray-500 mb-4">Protege la visualización de las métricas.</p>
         
@@ -172,7 +172,7 @@ export default function Ajustes() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo PIN (para cambiarlo)</label>
                 <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Dejar vacío para no cambiar" className={inputClass} />
               </div>
-              <button type="button" onClick={handleSavePin} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 sm:mt-6">Actualizar PIN</button>
+              <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 sm:mt-6">Actualizar PIN</button>
             </div>
 
             <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
@@ -199,7 +199,7 @@ export default function Ajustes() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
               <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Ej: 1234" className={inputClass} />
             </div>
-            <button type="button" onClick={handleSavePin} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 mb-0.5">Activar PIN</button>
+            <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 mb-0.5">Activar PIN</button>
           </div>
         )}
       </div>
