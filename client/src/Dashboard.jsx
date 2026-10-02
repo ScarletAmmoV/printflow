@@ -132,15 +132,16 @@ export default function Dashboard() {
       setOpenMenu({ id: null, direction: 'down' });
       return;
     }
+    
     const rect = e.currentTarget.getBoundingClientRect();
     const espacioAbajo = window.innerHeight - rect.bottom;
     const direction = espacioAbajo > 200 ? 'down' : 'up';
     setOpenMenu({ id, direction });
+  };
     const toggleRowExpand = (id) => {
     setExpandedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
-  };
-
+  
   const handleAccion = async (id, accion) => {
     setOpenMenu({ id: null, direction: 'down' });
     try {
@@ -379,7 +380,7 @@ export default function Dashboard() {
                             <MessageCircle size={14} />
                           </a>
                         </div>
-                      </td> {/* <--- ACÁ ESTABA EL ERROR, FALTABA ESTA ETIQUETA */}
+                      </td>
                       <td className={`px-4 py-3 hidden lg:table-cell ${expandedRows.includes(p.id) ? 'max-w-lg' : 'max-w-xs'}`}>
                         <p 
                           className={`text-gray-500 dark:text-gray-400 cursor-pointer ${!expandedRows.includes(p.id) ? 'truncate' : 'whitespace-normal break-words'}`} 
