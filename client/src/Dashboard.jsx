@@ -9,9 +9,6 @@ import {
   Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock
 } from 'lucide-react';
 
-
-
-
 // Cronómetro
 function CountdownTimer({ targetDate }) {
   const [timeLeft, setTimeLeft] = useState(180);
@@ -36,9 +33,9 @@ function CountdownTimer({ targetDate }) {
     <div className="group relative flex items-center justify-end w-16">
       <svg width="32" height="32" className="transform -rotate-90">
         <circle cx="16" cy="16" r={radius} stroke="currentColor" className="text-gray-200 dark:text-gray-600" strokeWidth="3" fill="none" />
-        <circle cx="16" cy="16" r={radius} stroke={timeLeft < 60 ? '#ef4444' : '#6366f1'} strokeWidth="3" fill="none" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear' }} />
+        <circle cx="16" cy="16" r={radius} stroke={timeLeft < 60 ? '#ef4444' : '#0D2D53'} strokeWidth="3" fill="none" strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" style={{ transition: 'stroke-dashoffset 1s linear' }} />
       </svg>
-      <span className="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-800 text-white text-xs rounded py-1 px-2 pointer-events-none z-50 whitespace-nowrap">
+      <span className="absolute right-0 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0A0D12] text-white text-xs rounded py-1 px-2 pointer-events-none z-50 whitespace-nowrap">
         {timeLeft === 0 ? 'Enviado' : formatTime}
       </span>
     </div>
@@ -80,10 +77,9 @@ export default function Dashboard() {
   const [showMetricas, setShowMetricas] = useState(false);
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
-  const [pinExpiry, setPinExpiry] = useState(0); // NUEVO: Timestamp de expiración
+  const [pinExpiry, setPinExpiry] = useState(0); 
   
-  // Simplificamos el estado del menú: solo guardamos el ID
-    const [openMenu, setOpenMenu] = useState({ id: null, direction: 'down' });
+  const [openMenu, setOpenMenu] = useState({ id: null, direction: 'down' });
 
   const taller = JSON.parse(localStorage.getItem('taller'));
 
@@ -118,15 +114,13 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [tab, search, searchFecha]);
 
-  // Cerrar menú al hacer clic fuera
   useEffect(() => {
      const handleClickOutside = () => setOpenMenu({ id: null, direction: 'down' });
     window.addEventListener('click', handleClickOutside);
     return () => window.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Cambiar el ID del menú abierto
-      const toggleMenu = (e, id) => {
+  const toggleMenu = (e, id) => {
     e.stopPropagation();
     if (openMenu.id === id) {
       setOpenMenu({ id: null, direction: 'down' });
@@ -138,7 +132,8 @@ export default function Dashboard() {
     const direction = espacioAbajo > 200 ? 'down' : 'up';
     setOpenMenu({ id, direction });
   };
-    const toggleRowExpand = (id) => {
+  
+  const toggleRowExpand = (id) => {
     setExpandedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
   
@@ -154,25 +149,24 @@ export default function Dashboard() {
       await fetchPedidos(); await fetchCounts();
     } catch (err) { showToast('Error al actualizar'); }
   };
+  
   const toggleSelect = (id) => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
 
-  // Lógica: Primer clic muestra los checks, segundo clic selecciona todos, tercer clic los oculta
   const handleSelectAll = () => {
     if (!showCheckboxes) {
       setShowCheckboxes(true);
     } else {
       if (selectedIds.length === pedidos.length) {
-        // Si están todos seleccionados, los deselecciono y oculto
         setSelectedIds([]);
         setShowCheckboxes(false);
       } else {
-        // Si hay algunos seleccionados, marco todos
         setSelectedIds(pedidos.map(p => p.id));
       }
     }
   };
+  
   const handleFinalizarMasivo = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`¿Marcar ${selectedIds.length} pedido(s) como listos? Se iniciarán los cronómetros de WhatsApp.`)) return;
@@ -185,6 +179,7 @@ export default function Dashboard() {
       await fetchCounts();
     } catch (err) { showToast('Error al finalizar'); }
   };
+  
   const handleEliminarMasivo = async () => {
     if (selectedIds.length === 0) return;
     if (!confirm(`¿Eliminar ${selectedIds.length} pedido(s)?`)) return;
@@ -197,6 +192,7 @@ export default function Dashboard() {
       await fetchCounts();
     } catch (err) { showToast('Error al eliminar'); }
   };
+  
   const handleLogout = () => {
     localStorage.removeItem('token'); localStorage.removeItem('taller'); window.location.href = '/login';
   };
@@ -216,18 +212,18 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col md:flex-row transition-colors">
+    <div className="min-h-screen bg-[#F4F5F7] dark:bg-[#0A0D12] flex flex-col md:flex-row transition-colors">
       
       {/* SIDEBAR */}
-      <nav className={`bg-white dark:bg-gray-800 border-r dark:border-gray-700 flex flex-col p-4 transition-all duration-300 ${sidebarCollapsed ? 'md:w-20' : 'md:w-60'} w-full`}>
+      <nav className={`bg-white dark:bg-[#17191C] border-r dark:border-gray-700 flex flex-col p-4 transition-all duration-300 ${sidebarCollapsed ? 'md:w-20' : 'md:w-60'} w-full`}>
         <div className="flex justify-between items-center mb-8">
           {!sidebarCollapsed && (
             <div className="hidden md:block">
-              <h1 className="text-xl font-bold text-indigo-600 dark:text-indigo-400">PrintFlow</h1>
+              <h1 className="text-xl font-bold text-[#0D2D53] dark:text-blue-300">Kova Solutions</h1>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 truncate">{taller?.nombre}</p>
             </div>
           )}
-          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-gray-400 hover:text-indigo-600 p-2 hidden md:block" title={sidebarCollapsed ? 'Expandir' : 'Contraer'}>
+          <button onClick={() => setSidebarCollapsed(!sidebarCollapsed)} className="text-gray-400 hover:text-[#0D2D53] p-2 hidden md:block" title={sidebarCollapsed ? 'Expandir' : 'Contraer'}>
             {sidebarCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
           </button>
         </div>
@@ -236,16 +232,16 @@ export default function Dashboard() {
           {tabs.map(t => {
             const Icon = t.icon;
             return (
-              <button key={t.id} onClick={() => setTab(t.id)} title={sidebarCollapsed ? t.label : ''} className={`relative flex items-center justify-between p-2.5 rounded-lg transition-all whitespace-nowrap ${tab === t.id ? 'bg-indigo-600 text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+              <button key={t.id} onClick={() => setTab(t.id)} title={sidebarCollapsed ? t.label : ''} className={`relative flex items-center justify-between p-2.5 rounded-lg transition-all whitespace-nowrap ${tab === t.id ? 'bg-[#0D2D53] text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
                 <div className="flex items-center gap-2">
                   <Icon size={18} className="flex-shrink-0" />
                   {!sidebarCollapsed && <span className="text-sm">{t.label}</span>}
                 </div>
                 {t.count !== null && (
                   sidebarCollapsed ? (
-                    <span className={`absolute bottom-1 right-1 px-1 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count, true)}</span>
+                    <span className={`absolute bottom-1 right-1 px-1 py-0.5 rounded-full text-[10px] ${tab === t.id ? 'bg-white text-[#0D2D53]' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count, true)}</span>
                   ) : (
-                    <span className={`px-2 py-0.5 rounded-full text-xs ${tab === t.id ? 'bg-white text-indigo-600' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count)}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs ${tab === t.id ? 'bg-white text-[#0D2D53]' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-200'}`}>{formatCount(t.count)}</span>
                   )
                 )}
               </button>
@@ -275,35 +271,34 @@ export default function Dashboard() {
         ) : (
         <>
 
-        {/* MÉTRICAS */}
+        {/* MÉTRICAS RÁPIDAS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-[#17191C] p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Pendientes Actuales</p>
             <p className="text-3xl font-bold text-green-600 dark:text-green-400 mt-1">{formatCount(counts.pendientes)}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-[#17191C] p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Finalizados (Hoy)</p>
-            <p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">{formatCount(counts.finalizadosHoy)}</p>
+            <p className="text-3xl font-bold text-[#0D2D53] dark:text-blue-300 mt-1">{formatCount(counts.finalizadosHoy)}</p>
           </div>
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="bg-white dark:bg-[#17191C] p-4 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Finalizados esta semana</p>
             <p className="text-3xl font-bold text-blue-500 dark:text-blue-400 mt-1">{formatCount(counts.finalizadosSemana)}</p>
           </div>
         </div>
 
         {/* BÚSQUEDA */}
-                <header className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+        <header className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto items-center">
             <div className="relative w-full md:w-80">
               <Search size={18} className="absolute left-3 top-2.5 text-gray-400" />
-              <input type="text" placeholder="Buscar por nombre, fecha u orden..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+              <input type="text" placeholder="Buscar por nombre, fecha u orden..." value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0D2D53] outline-none dark:bg-[#17191C] dark:border-gray-600 dark:text-white" />
             </div>
             <div className="relative w-full md:w-48">
               <Calendar size={18} className="absolute left-3 top-2.5 text-gray-400 pointer-events-none" />
-              <input type="date" value={searchFecha} onChange={(e) => setSearchFecha(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none dark:bg-gray-800 dark:border-gray-600 dark:text-white" />
+              <input type="date" value={searchFecha} onChange={(e) => setSearchFecha(e.target.value)} className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#0D2D53] outline-none dark:bg-[#17191C] dark:border-gray-600 dark:text-white" />
             </div>
             
-            {/* ÍCONOS MOVIDOS A LA IZQUIERDA */}
             {selectedIds.length > 0 && (
               <div className="flex items-center gap-1">
                 <button onClick={handleFinalizarMasivo} title="Marcar como listos" className="p-2 text-green-500 hover:bg-green-100 dark:hover:bg-green-900/30 rounded-full">
@@ -316,16 +311,15 @@ export default function Dashboard() {
             )}
           </div>
           
-          <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 w-full md:w-auto flex items-center justify-center gap-2">
+          <button onClick={() => { setPedidoEditar(null); setShowModal(true); }} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 w-full md:w-auto flex items-center justify-center gap-2">
             <PlusCircle size={18} /> Nuevo Pedido
           </button>
         </header>
 
         {/* TABLA */}
-        {/* Quitamos overflow-x-auto para que el menú absoluto no se corte */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-[#17191C] rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
           {loading ? (
-            <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600"></div></div>
+            <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#0D2D53]"></div></div>
           ) : pedidos.length === 0 ? (
             <div className="text-center py-16 text-gray-500 dark:text-gray-400"><p>No hay pedidos en esta sección.</p></div>
           ) : (
@@ -401,7 +395,7 @@ export default function Dashboard() {
                               rel="noreferrer"
                               onClick={() => !p.archivosImpresos && handleAccion(p.id, 'marcar-impresos')}
                               title="Abrir archivo para imprimir"
-                              className="p-2 rounded-full text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-900/30"
+                              className="p-2 rounded-full text-[#0D2D53] hover:bg-[#0D2D53]/10 dark:text-blue-300 dark:hover:bg-[#0D2D53]/40"
                             >
                               <Paperclip size={18} />
                             </a>
@@ -432,7 +426,7 @@ export default function Dashboard() {
                     <td className="px-4 py-3 text-right relative">
                       <div className="flex items-center justify-end gap-2">
                         {p.estado === 'pendiente' && (
-                          <button onClick={() => handleAccion(p.id, 'finalizar')} className="bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-indigo-100 dark:hover:bg-indigo-900/50 flex items-center gap-1" title="Marcar como listo">
+                          <button onClick={() => handleAccion(p.id, 'finalizar')} className="bg-[#0D2D53]/10 text-[#0D2D53] dark:bg-[#0D2D53]/40 dark:text-blue-300 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-[#0D2D53]/20 dark:hover:bg-[#0D2D53]/50 flex items-center gap-1" title="Marcar como listo">
                             <CheckCircle size={14} /> Listo
                           </button>
                         )}
@@ -443,7 +437,7 @@ export default function Dashboard() {
 
                       {openMenu.id === p.id && (
                         <div 
-                          className={`absolute right-4 w-44 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-2xl z-50 py-1 text-left ${openMenu.direction === 'down' ? 'top-full mt-1' : 'bottom-full mb-1'}`} 
+                          className={`absolute right-4 w-44 bg-white dark:bg-[#17191C] border dark:border-gray-700 rounded-lg shadow-2xl z-50 py-1 text-left ${openMenu.direction === 'down' ? 'top-full mt-1' : 'bottom-full mb-1'}`} 
                           onClick={(e) => e.stopPropagation()}
                         >
                           <button onClick={() => { setPedidoEditar(p); setShowModal(true); setOpenMenu({ id: null, direction: 'down' }); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
@@ -492,7 +486,7 @@ export default function Dashboard() {
       )}
 
       {toast && (
-        <div className="fixed bottom-4 right-4 bg-gray-800 dark:bg-gray-200 dark:text-gray-800 text-white px-6 py-3 rounded-lg shadow-xl z-50">
+        <div className="fixed bottom-4 right-4 bg-[#0A0D12] dark:bg-[#F4F5F7] dark:text-[#0A0D12] text-white px-6 py-3 rounded-lg shadow-xl z-50">
           {toast}
         </div>
       )}
