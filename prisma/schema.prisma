@@ -21,16 +21,20 @@ model Taller {
   metaPhoneId     String?
   plantillaMensaje String? @default("*{taller}*: Hola {cliente}! Tu pedido #{orden} está listo para {entrega}.")
   
-  // NUEVO: Tokens de Gmail
+Tokens de Gmail
   gmailAccessToken  String?
   gmailRefreshToken String?
 
-  // NUEVO: Para recuperar contraseña
+Para recuperar contraseña
   resetPasswordToken String?
   resetPasswordExpires DateTime?
   
-   // NUEVO: PIN para métricas
+PIN para métricas
   pinMetricas String?
+
+Tokens de Tienda Nube
+  tiendanubeToken String?
+  tiendanubeStoreId Int?
 }
 
 model Pedido {
