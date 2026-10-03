@@ -706,6 +706,56 @@ app.delete('/api/gmail/disconnect', verificarToken, async (req, res) => {
     res.status(500).json({ error: 'Error al desconectar' });
   }
 });
+
+// =======================================================
+// RUTAS DE TIENDA NUBE (OAuth)
+// =======================================================
+
+// 1. Iniciar conexión
+app.get('/api/tiendanube/auth', verificarToken, (req, res) => {
+  const url = `https://www.tiendanube.com/apps/44918/authorize?client_id=${process.env.TIENDANUBE_CLIENT_ID}&redirect_uri=https://printflow-api-7119.onrender.com/api/tiendanube/callback&state=${req.tallerId}`;
+  res.json({ url });
+});
+
+// 2. Tienda Nube nos devuelve acá con el permiso
+app.get('/api/tiendanube/callback', async (req, res) => {
+  const code = req.query.code;
+  const tallerId = parseInt(req.query.state);
+  
+  try {
+    const response = await fetch('https://www.tiendanube.com/apps/44918/authorize', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        client_id: process.env.TIENDANUBE_CLIENT_ID,
+        client_secret: process.env.TIENDANUBE_CLIENT_SECRET,
+        grant_type: 'authorization_code',
+        code: code
+      })
+    });
+    
+    const data = await response.json();
+    
+    await prisma.taller.update({
+      where: { id: tallerId },
+      data: {
+        tiendanubeToken: data.access_token,
+        tiendanubeStoreId: data.user_id
+      }
+    });
+    
+    res.send('<script>window.close();</script><h1>Tienda Nube conectada con éxito. Podés cerrar esta ventana.</h1>');
+  } catch (error) {
+    console.error('Error en callback de Tienda Nube:', error);
+    res.status(500).send('Error al conectar Tienda Nube');
+  }
+});
+
+// 3. Saber si está conectado
+app.get('/api/tiendanube/status', verificarToken, async (req, res) => {
+  const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
+  res.json({ connected: !!taller?.tiendanubeToken });
+});
 // MARCAR ARCHIVOS COMO IMPRESOS
 app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) => {
   try {

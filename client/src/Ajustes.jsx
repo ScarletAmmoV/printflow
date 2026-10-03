@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import api from './api';
-import { Save, Loader2, Mail, CheckCircle, Lock } from 'lucide-react';
+import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag } from 'lucide-react';
 
 export default function Ajustes() {
   const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '' });
   const [gmailConnected, setGmailConnected] = useState(false);
+  const [tiendanubeConnected, setTiendanubeConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
@@ -20,6 +21,8 @@ export default function Ajustes() {
         setDatos(res.data);
         const gmailRes = await api.get('/gmail/status');
         setGmailConnected(gmailRes.data.connected);
+        const tnRes = await api.get('/tiendanube/status');
+        setTiendanubeConnected(tnRes.data.connected);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -49,6 +52,22 @@ export default function Ajustes() {
       setToast('Gmail desconectado');
       setTimeout(() => setToast(null), 3000);
     } catch (err) { setToast('Error al desconectar'); }
+  };
+
+    const handleConnectTiendanube = async () => {
+    try {
+      const res = await api.get('/tiendanube/auth');
+      window.open(res.data.url, '_blank', 'width=500,height=600');
+      const interval = setInterval(async () => {
+        const statusRes = await api.get('/tiendanube/status');
+        if (statusRes.data.connected) {
+          setTiendanubeConnected(true);
+          clearInterval(interval);
+          setToast('Tienda Nube conectada con éxito');
+          setTimeout(() => setToast(null), 3000);
+        }
+      }, 2000);
+    } catch (err) { setToast('Error al conectar Tienda Nube'); }
   };
 
   const handleSavePin = async () => {
@@ -116,6 +135,23 @@ export default function Ajustes() {
         ) : (
           <button onClick={handleConnectGmail} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2">
             <Mail size={18} /> Conectar Gmail
+          </button>
+        )}
+      </div>
+
+      {/* SECCIÓN TIENDA NUBE */}
+      <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+          <ShoppingBag size={20} className="text-[#0D2D53]" /> Conexión de Tienda Nube
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">Conecta tu tienda para que las ventas caigan automáticamente en Kova.</p>
+        {tiendanubeConnected ? (
+          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg">
+            <CheckCircle size={20} /><span className="font-medium">Tienda Conectada</span>
+          </div>
+        ) : (
+          <button onClick={handleConnectTiendanube} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
+            <ShoppingBag size={18} /> Conectar Tienda Nube
           </button>
         )}
       </div>
