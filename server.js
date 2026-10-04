@@ -776,6 +776,7 @@ app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) =
     res.status(500).json({ error: 'Error al actualizar' });
   }
 });
+
 // ELIMINAR PEDIDOS EN MASA
 app.post('/api/pedidos/eliminar-masivo', verificarToken, async (req, res) => {
   try {
