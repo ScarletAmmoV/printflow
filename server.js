@@ -707,6 +707,11 @@ app.delete('/api/gmail/disconnect', verificarToken, async (req, res) => {
   }
 });
 
+// WEBHOOKS DE PRIVACIDAD DE TIENDA NUBE (Obligatorios)
+app.post('/api/tiendanube/store-redact', (req, res) => res.sendStatus(200));
+app.post('/api/tiendanube/customers-redact', (req, res) => res.sendStatus(200));
+app.post('/api/tiendanube/customers-data-request', (req, res) => res.sendStatus(200));
+
 // =======================================================
 // RUTAS DE TIENDA NUBE (OAuth)
 // =======================================================
@@ -723,7 +728,7 @@ app.get('/api/tiendanube/callback', async (req, res) => {
   const tallerId = parseInt(req.query.state);
   
   try {
-    const response = await fetch('https://www.tiendanube.com/apps/44918/authorize', {
+    const response = await fetch(`https://www.tiendanube.com/apps/${process.env.TIENDANUBE_CLIENT_ID}/access_token`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -756,6 +761,8 @@ app.get('/api/tiendanube/status', verificarToken, async (req, res) => {
   const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
   res.json({ connected: !!taller?.tiendanubeToken });
 });
+
+
 // MARCAR ARCHIVOS COMO IMPRESOS
 app.patch('/api/pedidos/:id/marcar-impresos', verificarToken, async (req, res) => {
   try {
