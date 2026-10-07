@@ -728,7 +728,10 @@ app.get('/api/tiendanube/callback', async (req, res) => {
   const tallerId = parseInt(req.query.state);
   
   try {
-    const response = await fetch(`https://www.tiendanube.com/apps/${process.env.TIENDANUBE_CLIENT_ID}/access_token`, {
+    const tokenUrl = `https://www.tiendanube.com/apps/${process.env.TIENDANUBE_CLIENT_ID}/access_token`;
+    console.log("Pidiendo token a:", tokenUrl);
+    
+    const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -736,9 +739,16 @@ app.get('/api/tiendanube/callback', async (req, res) => {
         client_secret: process.env.TIENDANUBE_CLIENT_SECRET,
         grant_type: 'authorization_code',
         code: code,
-        redirect_uri: 'https://printflow-api-7119.onrender.com/api/tiendanube/callback' // ESTO ERA LO QUE FALTABA
+        redirect_uri: 'https://printflow-api-7119.onrender.com/api/tiendanube/callback'
       })
     });
+    
+    // Si Tienda Nube responde con un error, leemos el texto para ver qué fue
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Error de Tienda Nube:", response.status, errorText);
+      return res.status(500).send('Error al conectar con Tienda Nube. Revisa los logs de Render.');
+    }
     
     const data = await response.json();
     
