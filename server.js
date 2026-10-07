@@ -735,7 +735,8 @@ app.get('/api/tiendanube/callback', async (req, res) => {
         client_id: process.env.TIENDANUBE_CLIENT_ID,
         client_secret: process.env.TIENDANUBE_CLIENT_SECRET,
         grant_type: 'authorization_code',
-        code: code
+        code: code,
+        redirect_uri: 'https://printflow-api-7119.onrender.com/api/tiendanube/callback' // ESTO ERA LO QUE FALTABA
       })
     });
     
