@@ -246,6 +246,66 @@ setInterval(async () => {
     console.error('Error en el revisor de Gmail:', error);
   }
 }, 60000); // 60000 milisegundos = 1 minuto
+
+// =======================================================
+// EL REVISOR DE TIENDA NUBE (Worker)
+// =======================================================
+setInterval(async () => {
+  try {
+    // Buscamos todos los talleres que tengan Tienda Nube conectado
+    const talleres = await prisma.taller.findMany({
+      where: { tiendanubeToken: { not: null }, tiendanubeStoreId: { not: null } }
+    });
+
+    for (const taller of talleres) {
+      try {
+        // Le pedimos a Tienda Nube los últimos 5 pedidos
+        const response = await fetch(`https://api.tiendanube.com/v1/${taller.tiendanubeStoreId}/orders?per_page=5`, {
+          headers: {
+            'Authentication': `bearer ${taller.tiendanubeToken}`,
+            'User-Agent': 'Kova Solutions (gwillimanyt@gmail.com)' // Tienda Nube exige un User-Agent
+          }
+        });
+
+        if (!response.ok) continue;
+        const orders = await response.json();
+
+        for (const order of orders) {
+          // Nos fijamos si ya tenemos este pedido en Kova (usamos el ID de Tienda Nube como número de orden)
+          const existe = await prisma.pedido.findFirst({
+            where: { tallerId: taller.id, numeroOrden: String(order.id) }
+          });
+
+          // Si no existe, lo creamos
+          if (!existe) {
+            let detalleProductos = order.products.map(p => `${p.name} x${p.quantity}`).join(', ');
+            let nombreCompleto = order.customer_name ? order.customer_name.split(' ') : ['Cliente', 'TiendaNube'];
+            
+            await prisma.pedido.create({
+              data: {
+                tallerId: taller.id,
+                numeroOrden: String(order.id),
+                nombreCliente: nombreCompleto[0] || 'Cliente',
+                apellidoCliente: nombreCompleto.slice(1).join(' ') || '',
+                emailCliente: order.customer_email || null,
+                telefono: (order.customer_phone || order.billing_phone || '0000000000').replace(/\D/g, ''),
+                detalle: detalleProductos || 'Pedido online',
+                metodoEntrega: order.shipping_option ? 'envio' : 'retiro',
+                precioTotal: parseFloat(order.total) || 0,
+                estado: 'pendiente'
+              }
+            });
+            console.log(`[Tienda Nube] Pedido #${order.id} importado para ${taller.nombre}`);
+          }
+        }
+      } catch (err) {
+        console.error(`Error leyendo Tienda Nube para taller ${taller.id}:`, err.message);
+      }
+    }
+  } catch (error) {
+    console.error('Error en el revisor de Tienda Nube:', error);
+  }
+}, 30000); // 30000 milisegundos = 30 segundos
 // =======================================================
 // RUTAS DE AUTENTICACIÓN
 // =======================================================
