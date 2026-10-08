@@ -144,7 +144,7 @@ export default function Ajustes() {
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
           <ShoppingBag size={20} className="text-[#0D2D53]" /> Conexión de Tienda Nube (App a medida)
         </h3>
-        <p className="text-sm text-gray-500 mb-4">Genera tu token en 'Mi Tienda > Aplicaciones > Aplicaciones a medida' y pégalo aquí.</p>
+          <p className="text-sm text-gray-500 mb-4">Genera tu token en 'Mi Tienda &gt; Aplicaciones &gt; Aplicaciones a medida' y pégalo aquí.</p>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Store ID (ID de la tienda)</label>
