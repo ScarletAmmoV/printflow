@@ -3,7 +3,7 @@ import api from './api';
 import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag } from 'lucide-react';
 
 export default function Ajustes() {
-  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '' });
+  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', tiendanubeToken: '', tiendanubeStoreId: '' });
   const [gmailConnected, setGmailConnected] = useState(false);
   const [tiendanubeConnected, setTiendanubeConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -142,18 +142,19 @@ export default function Ajustes() {
       {/* SECCIÓN TIENDA NUBE */}
       <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
         <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <ShoppingBag size={20} className="text-[#0D2D53]" /> Conexión de Tienda Nube
+          <ShoppingBag size={20} className="text-[#0D2D53]" /> Conexión de Tienda Nube (App a medida)
         </h3>
-        <p className="text-sm text-gray-500 mb-4">Conecta tu tienda para que las ventas caigan automáticamente en Kova.</p>
-        {tiendanubeConnected ? (
-          <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg">
-            <CheckCircle size={20} /><span className="font-medium">Tienda Conectada</span>
+        <p className="text-sm text-gray-500 mb-4">Genera tu token en 'Mi Tienda > Aplicaciones > Aplicaciones a medida' y pégalo aquí.</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Store ID (ID de la tienda)</label>
+            <input type="text" value={datos.tiendanubeStoreId || ''} onChange={(e) => setDatos({...datos, tiendanubeStoreId: e.target.value})} className={inputClass} />
           </div>
-        ) : (
-          <button onClick={handleConnectTiendanube} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
-            <ShoppingBag size={18} /> Conectar Tienda Nube
-          </button>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Token</label>
+            <input type="text" value={datos.tiendanubeToken || ''} onChange={(e) => setDatos({...datos, tiendanubeToken: e.target.value})} className={inputClass} />
+          </div>
+        </div>
       </div>
 
       {/* SECCIÓN WHATSAPP Y MENSAJE */}

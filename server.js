@@ -541,7 +541,9 @@ app.get('/api/ajustes', verificarToken, async (req, res) => {
         metaToken: true, 
         metaPhoneId: true, 
         plantillaMensaje: true,
-        pinMetricas: true // NUEVO
+        pinMetricas: true,
+        tiendanubeToken: true, // NUEVO
+        tiendanubeStoreId: true // NUEVO
       }
     });
     res.json(taller);
@@ -553,16 +555,23 @@ app.get('/api/ajustes', verificarToken, async (req, res) => {
 // GUARDAR AJUSTES
 app.put('/api/ajustes', verificarToken, async (req, res) => {
   try {
-    const { metaToken, metaPhoneId, plantillaMensaje } = req.body;
+    const { metaToken, metaPhoneId, plantillaMensaje, tiendanubeToken, tiendanubeStoreId } = req.body;
     await prisma.taller.update({
       where: { id: req.tallerId },
-      data: { metaToken, metaPhoneId, plantillaMensaje }
+      data: { 
+        metaToken, 
+        metaPhoneId, 
+        plantillaMensaje,
+        tiendanubeToken,
+        tiendanubeStoreId: parseInt(tiendanubeStoreId) || null // NUEVO
+      }
     });
     res.json({ message: 'Ajustes guardados correctamente' });
   } catch (error) {
     res.status(500).json({ error: 'Error al guardar ajustes' });
   }
 });
+
 
 // GUARDAR PIN DE MÉTRICAS
 app.put('/api/ajustes/pin', verificarToken, async (req, res) => {
@@ -712,66 +721,7 @@ app.post('/api/tiendanube/store-redact', (req, res) => res.sendStatus(200));
 app.post('/api/tiendanube/customers-redact', (req, res) => res.sendStatus(200));
 app.post('/api/tiendanube/customers-data-request', (req, res) => res.sendStatus(200));
 
-// =======================================================
-// RUTAS DE TIENDA NUBE (OAuth)
-// =======================================================
 
-// 1. Iniciar conexión
-app.get('/api/tiendanube/auth', verificarToken, (req, res) => {
-  const url = `https://www.tiendanube.com/apps/44918/authorize?client_id=${process.env.TIENDANUBE_CLIENT_ID}&redirect_uri=https://printflow-api-7119.onrender.com/api/tiendanube/callback&state=${req.tallerId}`;
-  res.json({ url });
-});
-
-// 2. Tienda Nube nos devuelve acá con el permiso
-app.get('/api/tiendanube/callback', async (req, res) => {
-  const code = req.query.code;
-  const tallerId = parseInt(req.query.state);
-  
-  try {
-    const tokenUrl = `https://www.tiendanube.com/apps/${process.env.TIENDANUBE_CLIENT_ID}/access_token`;
-    console.log("Pidiendo token a:", tokenUrl);
-    
-    const response = await fetch(tokenUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        client_id: process.env.TIENDANUBE_CLIENT_ID,
-        client_secret: process.env.TIENDANUBE_CLIENT_SECRET,
-        grant_type: 'authorization_code',
-        code: code,
-        redirect_uri: 'https://printflow-api-7119.onrender.com/api/tiendanube/callback'
-      })
-    });
-    
-    // Si Tienda Nube responde con un error, leemos el texto para ver qué fue
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error("Error de Tienda Nube:", response.status, errorText);
-      return res.status(500).send('Error al conectar con Tienda Nube. Revisa los logs de Render.');
-    }
-    
-    const data = await response.json();
-    
-    await prisma.taller.update({
-      where: { id: tallerId },
-      data: {
-        tiendanubeToken: data.access_token,
-        tiendanubeStoreId: data.user_id
-      }
-    });
-    
-    res.send('<script>window.close();</script><h1>Tienda Nube conectada con éxito. Podés cerrar esta ventana.</h1>');
-  } catch (error) {
-    console.error('Error en callback de Tienda Nube:', error);
-    res.status(500).send('Error al conectar Tienda Nube');
-  }
-});
-
-// 3. Saber si está conectado
-app.get('/api/tiendanube/status', verificarToken, async (req, res) => {
-  const taller = await prisma.taller.findUnique({ where: { id: req.tallerId } });
-  res.json({ connected: !!taller?.tiendanubeToken });
-});
 
 
 // MARCAR ARCHIVOS COMO IMPRESOS
