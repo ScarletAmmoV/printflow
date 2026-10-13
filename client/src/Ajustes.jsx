@@ -3,7 +3,7 @@ import api from './api';
 import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag } from 'lucide-react';
 
 export default function Ajustes() {
-  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', tiendanubeToken: '', tiendanubeStoreId: '' });
+  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', tiendanubeToken: '', tiendanubeStoreId: '', facturaDomicilio: '', facturaCondicion: '' });
   const [gmailConnected, setGmailConnected] = useState(false);
   const [tiendanubeConnected, setTiendanubeConnected] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -239,6 +239,34 @@ export default function Ajustes() {
             <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 mb-0.5">Activar PIN</button>
           </div>
         )}
+              {/* SECCIÓN FACTURACIÓN */}
+        <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
+          <FileText size={20} className="text-[#0D2D53]" /> Datos de Facturación (Tu Negocio)
+        </h3>
+        <p className="text-sm text-gray-500 mb-4">Estos datos aparecerán en las facturas que generes para tus clientes.</p>
+        
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Razón Social / Nombre</label>
+              <input type="text" value={datos.facturaRazonSocial || ''} onChange={(e) => setDatos({...datos, facturaRazonSocial: e.target.value})} placeholder="Ej: Deiar o Juan Pérez" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">CUIT / DNI</label>
+              <input type="text" value={datos.facturaCuit || ''} onChange={(e) => setDatos({...datos, facturaCuit: e.target.value})} placeholder="Ej: 20-12345678-9" className={inputClass} />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Domicilio Fiscal</label>
+            <input type="text" value={datos.facturaDomicilio || ''} onChange={(e) => setDatos({...datos, facturaDomicilio: e.target.value})} placeholder="Ej: Av. San Martín 123, CABA" className={inputClass} />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Condición Fiscal</label>
+            <input type="text" value={datos.facturaCondicion || ''} onChange={(e) => setDatos({...datos, facturaCondicion: e.target.value})} placeholder="Ej: Monotributista / Responsable Inscripto" className={inputClass} />
+            </div>
+          </div>
+        </div>
       </div>
 
       {toast && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-md text-sm">{toast}</div>}

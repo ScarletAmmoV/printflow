@@ -281,6 +281,11 @@ setInterval(async () => {
             let detalleProductos = order.products.map(p => `${p.name} x${p.quantity}`).join(', ');
             let nombreCompleto = order.customer_name ? order.customer_name.split(' ') : ['Cliente', 'TiendaNube'];
             
+            // NUEVO: Leemos los datos de facturación (si el cliente desmarcó la casilla, vendrán distintos)
+            let facturaNombre = order.billing_name || order.customer_name || 'Consumidor Final';
+            let facturaDoc = order.billing_document || order.customer_document || '00000000';
+            let facturaDomicilio = `${order.billing_address || ''} ${order.billing_city || ''} ${order.billing_zipcode || ''}`.trim() || 'Sin domicilio';
+
             await prisma.pedido.create({
               data: {
                 tallerId: taller.id,
@@ -292,7 +297,11 @@ setInterval(async () => {
                 detalle: detalleProductos || 'Pedido online',
                 metodoEntrega: order.shipping_option ? 'envio' : 'retiro',
                 precioTotal: parseFloat(order.total) || 0,
-                estado: 'pendiente'
+                estado: 'pendiente',
+                // NUEVO: Guardamos los datos de facturación
+                clienteFacturaNombre: facturaNombre,
+                clienteFacturaDocumento: facturaDoc,
+                clienteFacturaDomicilio: facturaDomicilio
               }
             });
             console.log(`[Tienda Nube] Pedido #${order.id} importado para ${taller.nombre}`);
@@ -598,8 +607,12 @@ app.get('/api/ajustes', verificarToken, async (req, res) => {
         metaPhoneId: true, 
         plantillaMensaje: true,
         pinMetricas: true,
-        tiendanubeToken: true, // NUEVO
-        tiendanubeStoreId: true // NUEVO
+        tiendanubeToken: true,
+        tiendanubeStoreId: true,
+        facturaRazonSocial: true,
+        facturaCuit: true,
+        facturaDomicilio: true,
+        facturaCondicion: true
       }
     });
     res.json(taller);
@@ -611,7 +624,7 @@ app.get('/api/ajustes', verificarToken, async (req, res) => {
 // GUARDAR AJUSTES
 app.put('/api/ajustes', verificarToken, async (req, res) => {
   try {
-    const { metaToken, metaPhoneId, plantillaMensaje, tiendanubeToken, tiendanubeStoreId } = req.body;
+    const { metaToken, metaPhoneId, plantillaMensaje, tiendanubeToken, tiendanubeStoreId, facturaRazonSocial, facturaCuit, facturaDomicilio, facturaCondicion } = req.body;
     await prisma.taller.update({
       where: { id: req.tallerId },
       data: { 
@@ -619,7 +632,11 @@ app.put('/api/ajustes', verificarToken, async (req, res) => {
         metaPhoneId, 
         plantillaMensaje,
         tiendanubeToken,
-        tiendanubeStoreId: parseInt(tiendanubeStoreId) || null // NUEVO
+        tiendanubeStoreId: parseInt(tiendanubeStoreId) || null,
+        facturaRazonSocial,
+        facturaCuit,
+        facturaDomicilio,
+        facturaCondicion
       }
     });
     res.json({ message: 'Ajustes guardados correctamente' });
