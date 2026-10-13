@@ -35,6 +35,12 @@ model Taller {
   // Tokens de Tienda Nube
   tiendanubeToken String?
   tiendanubeStoreId Int?
+
+  // Datos de Facturación del Dueño
+  facturaRazonSocial String?
+  facturaCuit        String?
+  facturaDomicilio   String?
+  facturaCondicion   String?
 }
 
 model Pedido {
@@ -58,4 +64,8 @@ model Pedido {
   
   archivosAdjuntos           String?
   archivosImpresos           Boolean   @default(false)
+
+  clienteFacturaNombre   String?
+  clienteFacturaDocumento String?
+  clienteFacturaDomicilio String?
 }
