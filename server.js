@@ -459,12 +459,8 @@ app.get('/api/pedidos', verificarToken, async (req, res) => {
       whereClause.fechaEntrada = { gte: start, lte: end };
     }
 
-    let orderBy = {};
-    if (estado === 'pendiente') {
-      orderBy = { fechaEntrada: 'asc' };
-    } else {
-      orderBy = { fechaEntrada: 'desc' };
-    }
+// Ordenamiento: Siempre el más nuevo arriba
+    let orderBy = { fechaEntrada: 'desc' };
 
     // Obtenemos los pedidos de la base de datos
     let pedidos = await prisma.pedido.findMany({ where: whereClause, orderBy });

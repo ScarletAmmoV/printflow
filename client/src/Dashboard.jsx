@@ -194,7 +194,7 @@ export default function Dashboard() {
   };
   
   const handleLogout = () => {
-    localStorage.removeItem('token'); localStorage.removeItem('taller'); window.location.href = '/login';
+    localStorage.removeItem('token'); localStorage.removeItem('taller'); window.location.href = '/#/login';
   };
 
   const formatCount = (num, collapsed = false) => {
@@ -384,32 +384,27 @@ export default function Dashboard() {
                           {p.detalle}
                         </p>
                       </td>
-                    <td className="px-4 py-3 text-center">
-                      {p.archivosAdjuntos ? (
-                        <div className="flex items-center justify-center gap-2">
-                          {p.archivosAdjuntos.split(',').map((url, index) => (
-                            <a 
-                              key={index}
-                              href={url.trim()} 
-                              target="_blank" 
-                              rel="noreferrer"
-                              onClick={() => !p.archivosImpresos && handleAccion(p.id, 'marcar-impresos')}
-                              title="Abrir archivo para imprimir"
-                              className="p-2 rounded-full text-[#0D2D53] hover:bg-[#0D2D53]/10 dark:text-blue-300 dark:hover:bg-[#0D2D53]/40"
-                            >
-                              <Paperclip size={18} />
-                            </a>
-                          ))}
-                          {p.archivosImpresos && (
-                            <span title="Archivos marcados como impresos" className="p-2 rounded-full text-green-500">
-                              <CheckCircle size={18} />
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
-                      )}
-                    </td>
+                <td className="px-4 py-3 text-center">
+                  {p.archivosAdjuntos ? (
+                    <div className="flex items-center justify-center gap-2">
+                      {p.archivosAdjuntos.split(',').map((url, index) => (
+                        <a 
+                          key={index}
+                          href={url.trim()} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          onClick={() => !p.archivosImpresos && handleAccion(p.id, 'marcar-impresos')}
+                          title={p.archivosImpresos ? "Archivos impresos" : "Abrir archivo para imprimir"}
+                          className={`p-2 rounded-full ${p.archivosImpresos ? 'text-green-500' : 'text-[#0D2D53] hover:bg-[#0D2D53]/10 dark:text-blue-300 dark:hover:bg-[#0D2D53]/40'}`}
+                        >
+                          <Paperclip size={18} />
+                        </a>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-300 dark:text-gray-600 text-xs">-</span>
+                  )}
+                </td>
                     <td className="px-4 py-3">
                       <span className={`px-2 py-1 rounded text-xs font-medium ${p.metodoEntrega === 'retiro' ? 'bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400' : 'bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400'}`}>{p.metodoEntrega}</span>
                     </td>
