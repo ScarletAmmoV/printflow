@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from './api';
-import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag } from 'lucide-react';
+import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag, FileText } from 'lucide-react';
 
 export default function Ajustes() {
   const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', tiendanubeToken: '', tiendanubeStoreId: '', facturaDomicilio: '', facturaCondicion: '' });
