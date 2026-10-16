@@ -3,10 +3,11 @@ import api from './api';
 import OrderFormModal from './OrderFormModal';
 import Ajustes from './Ajustes';
 import Metricas from './Metricas';
+import { jsPDF } from 'jspdf';
 import { 
   MoreVertical, Pencil, Undo2, Zap, Trash2, RotateCcw, MessageCircle, 
   ChevronLeft, ChevronRight, Search, Calendar, PlusCircle, CheckCircle, 
-  Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock
+  Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock, Filetext 
 } from 'lucide-react';
 
 // Cronómetro
@@ -136,7 +137,61 @@ export default function Dashboard() {
   const toggleRowExpand = (id) => {
     setExpandedRows(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
   };
-  
+    const handleGenerarFactura = async (p) => {
+    try {
+      // Pedimos los datos del dueño para ponerlos en el encabezado
+      const res = await api.get('/ajustes');
+      const tallerData = res.data;
+
+      const doc = new jsPDF();
+      
+      // Encabezado (Datos del dueño)
+      doc.setFontSize(20);
+      doc.text(tallerData.facturaRazonSocial || tallerData.nombre || 'Mi Negocio', 14, 20);
+      doc.setFontSize(10);
+      doc.text(`CUIT: ${tallerData.facturaCuit || 'N/A'}`, 14, 27);
+      doc.text(`Domicilio: ${tallerData.facturaDomicilio || 'N/A'}`, 14, 33);
+      doc.text(`Condición Fiscal: ${tallerData.facturaCondicion || 'N/A'}`, 14, 39);
+      
+      // Título y Datos del Pedido
+      doc.setFontSize(16);
+      doc.text('FACTURA / RECIBO', 140, 20);
+      doc.setFontSize(10);
+      doc.text(`N°: ${p.numeroOrden}`, 140, 27);
+      doc.text(`Fecha: ${new Date(p.fechaEntrada).toLocaleDateString()}`, 140, 33);
+
+      // Línea separadora
+      doc.line(14, 45, 196, 45);
+
+      // Datos del Cliente
+      doc.setFontSize(12);
+      doc.text('Cliente:', 14, 55);
+      doc.setFontSize(10);
+      doc.text(`${p.clienteFacturaNombre || `${p.nombreCliente} ${p.apellidoCliente}`}`, 35, 55);
+      doc.text(`Doc: ${p.clienteFacturaDocumento || 'N/A'}`, 14, 61);
+      doc.text(`Domicilio: ${p.clienteFacturaDomicilio || 'N/A'}`, 14, 67);
+
+      // Detalle del Pedido
+      doc.setFontSize(12);
+      doc.text('Detalle:', 14, 80);
+      doc.setFontSize(10);
+      const splitDetalle = doc.splitTextToSize(p.detalle, 180);
+      doc.text(splitDetalle, 14, 86);
+
+      // Total
+      let y = 86 + (splitDetalle.length * 5) + 10;
+      doc.line(14, y, 196, y);
+      doc.setFontSize(14);
+      doc.text(`TOTAL: $${p.precioTotal || 0}`, 14, y + 8);
+
+      // Descarga el archivo
+      doc.save(`Factura-${p.numeroOrden}.pdf`);
+      setOpenMenu({ id: null, direction: 'down' });
+      showToast('Factura descargada');
+    } catch (err) {
+      showToast('Error al generar factura');
+    }
+  };
   const handleAccion = async (id, accion) => {
     setOpenMenu({ id: null, direction: 'down' });
     try {
@@ -438,7 +493,9 @@ export default function Dashboard() {
                           <button onClick={() => { setPedidoEditar(p); setShowModal(true); setOpenMenu({ id: null, direction: 'down' }); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <Pencil size={14} /> Editar
                           </button>
-                          
+                                                    <button onClick={() => handleGenerarFactura(pedidoActivoMenu)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <FileText size={14} /> Generar Factura
+                          </button>
                           {p.estado === 'finalizado' && !p.notificacionEnviada && (
                             <>
                               <button onClick={() => handleAccion(p.id, 'revertir')} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
