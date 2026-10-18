@@ -3,12 +3,16 @@ import api from './api';
 import { Save, Loader2, Mail, CheckCircle, Lock, ShoppingBag, FileText } from 'lucide-react';
 
 export default function Ajustes() {
-  const [datos, setDatos] = useState({ metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', tiendanubeToken: '', tiendanubeStoreId: '', facturaDomicilio: '', facturaCondicion: '' });
+  const [datos, setDatos] = useState({ 
+    metaToken: '', metaPhoneId: '', plantillaMensaje: '', pinMetricas: '', 
+    tiendanubeToken: '', tiendanubeStoreId: '',
+    facturaRazonSocial: '', facturaCuit: '', facturaDomicilio: '', facturaCondicion: ''
+  });
   const [gmailConnected, setGmailConnected] = useState(false);
-  const [tiendanubeConnected, setTiendanubeConnected] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
+  const [activeTab, setActiveTab] = useState('integraciones'); // Sistema de pestañas
   
   const [pinInput, setPinInput] = useState('');
   const [pinDesactivar, setPinDesactivar] = useState('');
@@ -21,8 +25,6 @@ export default function Ajustes() {
         setDatos(res.data);
         const gmailRes = await api.get('/gmail/status');
         setGmailConnected(gmailRes.data.connected);
-        const tnRes = await api.get('/tiendanube/status');
-        setTiendanubeConnected(tnRes.data.connected);
       } catch (err) { console.error(err); }
       finally { setLoading(false); }
     };
@@ -32,16 +34,7 @@ export default function Ajustes() {
   const handleConnectGmail = async () => {
     try {
       const res = await api.get('/gmail/auth');
-      window.open(res.data.url, '_blank', 'width=500,height=600');
-      const interval = setInterval(async () => {
-        const statusRes = await api.get('/gmail/status');
-        if (statusRes.data.connected) {
-          setGmailConnected(true);
-          clearInterval(interval);
-          setToast('Gmail conectado con éxito');
-          setTimeout(() => setToast(null), 3000);
-        }
-      }, 2000);
+      window.location.href = res.data.url;
     } catch (err) { setToast('Error al conectar Gmail'); }
   };
 
@@ -52,22 +45,6 @@ export default function Ajustes() {
       setToast('Gmail desconectado');
       setTimeout(() => setToast(null), 3000);
     } catch (err) { setToast('Error al desconectar'); }
-  };
-
-    const handleConnectTiendanube = async () => {
-    try {
-      const res = await api.get('/tiendanube/auth');
-      window.open(res.data.url, '_blank', 'width=500,height=600');
-      const interval = setInterval(async () => {
-        const statusRes = await api.get('/tiendanube/status');
-        if (statusRes.data.connected) {
-          setTiendanubeConnected(true);
-          clearInterval(interval);
-          setToast('Tienda Nube conectada con éxito');
-          setTimeout(() => setToast(null), 3000);
-        }
-      }, 2000);
-    } catch (err) { setToast('Error al conectar Tienda Nube'); }
   };
 
   const handleSavePin = async () => {
@@ -115,159 +92,182 @@ export default function Ajustes() {
   if (loading) return <div className="flex justify-center p-8"><Loader2 className="animate-spin text-[#0D2D53]" /></div>;
 
   const inputClass = "mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-[#0D2D53] focus:border-[#0D2D53] dark:bg-[#17191C] dark:text-white";
+  const titleClass = "text-lg font-bold text-[#0A0D12] dark:text-white mb-2 flex items-center gap-2";
+  const tabButtonClass = "flex-1 py-2 text-sm font-medium rounded-md transition-all";
 
   return (
-    <div className="max-w-2xl mx-auto bg-white dark:bg-[#17191C] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 space-y-8">
+    <div className="max-w-2xl mx-auto bg-white dark:bg-[#17191C] p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
       
-      {/* SECCIÓN GMAIL */}
-      <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <Mail size={20} className="text-red-500" /> Conexión de Gmail
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">Conecta tu cuenta para que lea los diseños automáticamente.</p>
-        {gmailConnected ? (
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg flex-1">
-              <CheckCircle size={20} /><span className="font-medium">Gmail Conectado</span>
-            </div>
-            <button onClick={handleDisconnectGmail} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 text-sm">Desconectar</button>
-          </div>
-        ) : (
-          <button onClick={handleConnectGmail} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2">
-            <Mail size={18} /> Conectar Gmail
-          </button>
-        )}
+      {/* Pestañas Internas */}
+      <div className="flex mb-6 bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
+        <button onClick={() => setActiveTab('integraciones')} className={`${tabButtonClass} ${activeTab === 'integraciones' ? 'bg-white dark:bg-[#0A0D12] shadow text-[#0D2D53] dark:text-blue-300' : 'text-gray-500'}`}>Integraciones</button>
+        <button onClick={() => setActiveTab('facturacion')} className={`${tabButtonClass} ${activeTab === 'facturacion' ? 'bg-white dark:bg-[#0A0D12] shadow text-[#0D2D53] dark:text-blue-300' : 'text-gray-500'}`}>Facturación</button>
+        <button onClick={() => setActiveTab('seguridad')} className={`${tabButtonClass} ${activeTab === 'seguridad' ? 'bg-white dark:bg-[#0A0D12] shadow text-[#0D2D53] dark:text-blue-300' : 'text-gray-500'}`}>Seguridad</button>
       </div>
 
-      {/* SECCIÓN TIENDA NUBE */}
-      <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <ShoppingBag size={20} className="text-[#0D2D53]" /> Conexión de Tienda Nube (App a medida)
-        </h3>
-          <p className="text-sm text-gray-500 mb-4">Genera tu token en 'Mi Tienda &gt; Aplicaciones &gt; Aplicaciones a medida' y pégalo aquí.</p>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Store ID (ID de la tienda)</label>
-            <input type="text" value={datos.tiendanubeStoreId || ''} onChange={(e) => setDatos({...datos, tiendanubeStoreId: e.target.value})} className={inputClass} />
+      {/* CONTENIDO INTEGRACIONES */}
+      {activeTab === 'integraciones' && (
+        <div className="space-y-8">
+          
+          {/* TIENDA NUBE */}
+          <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
+            <h3 className={titleClass}>
+              <ShoppingBag size={20} className="text-[#0D2D53]" /> Tienda Nube
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">Genera tu token en 'Mi Tiena &gt; Aplicaciones &gt; Aplicaciones a medida' y pégalo aquí.</p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Store ID</label>
+                <input type="text" value={datos.tiendanubeStoreId || ''} onChange={(e) => setDatos({...datos, tiendanubeStoreId: e.target.value})} className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Token</label>
+                <input type="text" value={datos.tiendanubeToken || ''} onChange={(e) => setDatos({...datos, tiendanubeToken: e.target.value})} className={inputClass} />
+              </div>
+              <div className="flex justify-end">
+                <button type="submit" disabled={saving} className="bg-[#0D2D53] text-white px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
           </div>
+
+          {/* GMAIL */}
+          <div className="pb-6 border-b border-gray-100 dark:border-gray-700">
+            <h3 className={titleClass}>
+              <Mail size={20} className="text-red-500" /> Conexión de Gmail
+            </h3>
+            <p className="text-sm text-gray-500 mb-4">Conecta tu cuenta para que lea los diseños automáticamente.</p>
+            {gmailConnected ? (
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg flex-1">
+                  <CheckCircle size={20} /><span className="font-medium">Gmail Conectado</span>
+                </div>
+                <button onClick={handleDisconnectGmail} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 text-sm">Desconectar</button>
+              </div>
+            ) : (
+              <button onClick={handleConnectGmail} className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 flex items-center gap-2">
+                <Mail size={18} /> Conectar Gmail
+              </button>
+            )}
+          </div>
+
+          {/* WHATSAPP */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Token</label>
-            <input type="text" value={datos.tiendanubeToken || ''} onChange={(e) => setDatos({...datos, tiendanubeToken: e.target.value})} className={inputClass} />
+            <h3 className={titleClass}>WhatsApp (Meta API)</h3>
+            <p className="text-sm text-gray-500 mb-4">Ingresa las credenciales que te dio Meta for Developers.</p>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Token</label>
+                <input type="text" value={datos.metaToken || ''} onChange={(e) => setDatos({...datos, metaToken: e.target.value})} className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number ID</label>
+                <input type="text" value={datos.metaPhoneId || ''} onChange={(e) => setDatos({...datos, metaPhoneId: e.target.value})} className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Mensaje Automático</label>
+                <textarea value={datos.plantillaMensaje || ''} onChange={(e) => setDatos({...datos, plantillaMensaje: e.target.value})} rows="4" className={inputClass}></textarea>
+              </div>
+              <div className="flex justify-end">
+                <button type="submit" disabled={saving} className="bg-[#0D2D53] text-white px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
+                  {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                  {saving ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* SECCIÓN WHATSAPP Y MENSAJE */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Conexión de WhatsApp (Meta API)</h3>
-        <p className="text-sm text-gray-500 mb-4">Ingresa las credenciales que te dio Meta for Developers.</p>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Access Token</label>
-            <input type="text" value={datos.metaToken || ''} onChange={(e) => setDatos({...datos, metaToken: e.target.value})} className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone Number ID</label>
-            <input type="text" value={datos.metaPhoneId || ''} onChange={(e) => setDatos({...datos, metaPhoneId: e.target.value})} className={inputClass} />
-          </div>
-
-          <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2">Mensaje Automático</h3>
-            <ul className="text-sm text-gray-500 mb-4 list-disc list-inside bg-gray-50 dark:bg-gray-700 p-3 rounded-md">
-              <li><code>{'{taller}'}</code> - Nombre de tu negocio</li>
-              <li><code>{'{cliente}'}</code> - Nombre y apellido del cliente</li>
-              <li><code>{'{orden}'}</code> - Número de pedido</li>
-              <li><code>{'{entrega}'}</code> - retiro o envío</li>
-            </ul>
-            <textarea value={datos.plantillaMensaje || ''} onChange={(e) => setDatos({...datos, plantillaMensaje: e.target.value})} rows="4" className={inputClass}></textarea>
-          </div>
-
-          <div className="flex justify-end">
-            <button type="submit" disabled={saving} className="bg-[#0D2D53] text-white px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
-              {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
-              {saving ? 'Guardando...' : 'Guardar Cambios'}
-            </button>
-          </div>
-        </form>
-      </div>
-
-      {/* SECCIÓN PIN DE MÉTRICAS */}
-      <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <Lock size={20} className="text-[#0D2D53]" /> PIN de Métricas
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">Protege la visualización de las métricas.</p>
-        
-        {datos.pinMetricas ? (
-          <div className="space-y-4">
-            <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg text-sm flex items-center gap-2">
-              <CheckCircle size={18} /> PIN activado.
+      {/* CONTENIDO FACTURACIÓN */}
+      {activeTab === 'facturacion' && (
+        <div>
+          <h3 className={titleClass}>
+            <FileText size={20} className="text-[#0D2D53]" /> Datos de Facturación (Tu Negocio)
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">Estos datos aparecerán en las facturas que generes para tus clientes.</p>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Razón Social / Nombre</label>
+                <input type="text" value={datos.facturaRazonSocial || ''} onChange={(e) => setDatos({...datos, facturaRazonSocial: e.target.value})} placeholder="Ej: Deiar o Juan Pérez" className={inputClass} />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">CUIT / DNI</label>
+                <input type="text" value={datos.facturaCuit || ''} onChange={(e) => setDatos({...datos, facturaCuit: e.target.value})} placeholder="Ej: 20-12345678-9" className={inputClass} />
+              </div>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Domicilio Fiscal</label>
+              <input type="text" value={datos.facturaDomicilio || ''} onChange={(e) => setDatos({...datos, facturaDomicilio: e.target.value})} placeholder="Ej: Av. San Martín 123, CABA" className={inputClass} />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Condición Fiscal</label>
+              <input type="text" value={datos.facturaCondicion || ''} onChange={(e) => setDatos({...datos, facturaCondicion: e.target.value})} placeholder="Ej: Monotributista / Responsable Inscripto" className={inputClass} />
+            </div>
+            <div className="flex justify-end">
+              <button type="submit" disabled={saving} className="bg-[#0D2D53] text-white px-6 py-2 rounded-lg hover:opacity-90 flex items-center gap-2">
+                {saving ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
+                {saving ? 'Guardando...' : 'Guardar Datos'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
-            <div className="flex flex-col sm:flex-row gap-4">
+      {/* CONTENIDO SEGURIDAD */}
+      {activeTab === 'seguridad' && (
+        <div>
+          <h3 className={titleClass}>
+            <Lock size={20} className="text-[#0D2D53]" /> PIN de Métricas
+          </h3>
+          <p className="text-sm text-gray-500 mb-4">Protege la visualización de las métricas.</p>
+          
+          {datos.pinMetricas ? (
+            <div className="space-y-4">
+              <div className="bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 p-3 rounded-lg text-sm flex items-center gap-2">
+                <CheckCircle size={18} /> PIN activado.
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo PIN (para cambiarlo)</label>
+                  <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Dejar vacío para no cambiar" className={inputClass} />
+                </div>
+                <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 sm:mt-6">Actualizar PIN</button>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Desactivar PIN (Ingresa el PIN actual)</label>
+                  <div className="flex gap-2 mt-1">
+                    <input type="password" maxLength="4" value={pinDesactivar} onChange={(e) => setPinDesactivar(e.target.value.replace(/\D/g, ''))} className={inputClass} placeholder="****" />
+                    <button type="button" onClick={handleDesactivarPin} className="bg-gray-200 dark:bg-gray-600 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 whitespace-nowrap">Desactivar</button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Olvidé mi PIN (Ingresa tu contraseña)</label>
+                  <div className="flex gap-2 mt-1">
+                    <input type="password" value={passwordReset} onChange={(e) => setPasswordReset(e.target.value)} className={inputClass} placeholder="Tu contraseña de inicio" />
+                    <button type="button" onClick={handleResetPin} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 whitespace-nowrap">Restablecer</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-4 items-end">
               <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Nuevo PIN (para cambiarlo)</label>
-                <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Dejar vacío para no cambiar" className={inputClass} />
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
+                <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Ej: 1234" className={inputClass} />
               </div>
-              <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 sm:mt-6">Actualizar PIN</button>
+              <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 mb-0.5">Activar PIN</button>
             </div>
-
-            <div className="pt-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Desactivar PIN (Ingresa el PIN actual)</label>
-                <div className="flex gap-2 mt-1">
-                  <input type="password" maxLength="4" value={pinDesactivar} onChange={(e) => setPinDesactivar(e.target.value.replace(/\D/g, ''))} className={inputClass} placeholder="****" />
-                  <button type="button" onClick={handleDesactivarPin} className="bg-gray-200 dark:bg-gray-600 dark:text-white px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 whitespace-nowrap">Desactivar</button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Olvidé mi PIN (Ingresa tu contraseña)</label>
-                <div className="flex gap-2 mt-1">
-                  <input type="password" value={passwordReset} onChange={(e) => setPasswordReset(e.target.value)} className={inputClass} placeholder="Tu contraseña de inicio" />
-                  <button type="button" onClick={handleResetPin} className="bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 whitespace-nowrap">Restablecer</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">PIN (4 dígitos)</label>
-              <input type="text" maxLength="4" value={pinInput} onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))} placeholder="Ej: 1234" className={inputClass} />
-            </div>
-            <button type="button" onClick={handleSavePin} className="bg-[#0D2D53] text-white px-4 py-2 rounded-lg hover:opacity-90 mb-0.5">Activar PIN</button>
-          </div>
-        )}
-              {/* SECCIÓN FACTURACIÓN */}
-        <div className="pt-6 border-t border-gray-100 dark:border-gray-700">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-200 mb-2 flex items-center gap-2">
-          <FileText size={20} className="text-[#0D2D53]" /> Datos de Facturación (Tu Negocio)
-        </h3>
-        <p className="text-sm text-gray-500 mb-4">Estos datos aparecerán en las facturas que generes para tus clientes.</p>
-        
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Razón Social / Nombre</label>
-              <input type="text" value={datos.facturaRazonSocial || ''} onChange={(e) => setDatos({...datos, facturaRazonSocial: e.target.value})} placeholder="Ej: Deiar o Juan Pérez" className={inputClass} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">CUIT / DNI</label>
-              <input type="text" value={datos.facturaCuit || ''} onChange={(e) => setDatos({...datos, facturaCuit: e.target.value})} placeholder="Ej: 20-12345678-9" className={inputClass} />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Domicilio Fiscal</label>
-            <input type="text" value={datos.facturaDomicilio || ''} onChange={(e) => setDatos({...datos, facturaDomicilio: e.target.value})} placeholder="Ej: Av. San Martín 123, CABA" className={inputClass} />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Condición Fiscal</label>
-            <input type="text" value={datos.facturaCondicion || ''} onChange={(e) => setDatos({...datos, facturaCondicion: e.target.value})} placeholder="Ej: Monotributista / Responsable Inscripto" className={inputClass} />
-            </div>
-          </div>
+          )}
         </div>
-      </div>
+      )}
 
       {toast && <div className="mt-4 bg-green-100 text-green-700 p-3 rounded-md text-sm">{toast}</div>}
     </div>
