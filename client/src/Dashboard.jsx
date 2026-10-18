@@ -7,7 +7,7 @@ import { jsPDF } from 'jspdf';
 import { 
   MoreVertical, Pencil, Undo2, Zap, Trash2, RotateCcw, MessageCircle, 
   ChevronLeft, ChevronRight, Search, Calendar, PlusCircle, CheckCircle, 
-  Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock, Filetext 
+  Clock, Layers, Moon, Sun, X, Settings, Paperclip, BarChart, Lock, FileText 
 } from 'lucide-react';
 
 // Cronómetro
@@ -493,7 +493,7 @@ export default function Dashboard() {
                           <button onClick={() => { setPedidoEditar(p); setShowModal(true); setOpenMenu({ id: null, direction: 'down' }); }} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <Pencil size={14} /> Editar
                           </button>
-                                                    <button onClick={() => handleGenerarFactura(pedidoActivoMenu)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <button onClick={() => handleGenerarFactura(pedidoActivoMenu)} className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
                             <FileText size={14} /> Generar Factura
                           </button>
                           {p.estado === 'finalizado' && !p.notificacionEnviada && (
