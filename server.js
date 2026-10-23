@@ -271,10 +271,15 @@ setInterval(async () => {
         const orders = await response.json();
 
         for (const order of orders) {
+
+           // ESPÍA: Nos muestra todo lo que trae el pedido
+          console.log("DATOS CRUDOS DE TIENDA NUBE:", JSON.stringify(order, null, 2));
+          
           // Nos fijamos si ya tenemos este pedido en Kova (usamos el ID de Tienda Nube como número de orden)
           const existe = await prisma.pedido.findFirst({
             where: { tallerId: taller.id, numeroOrden: String(order.id) }
           });
+
 
           // Si no existe, lo creamos
           if (!existe) {
