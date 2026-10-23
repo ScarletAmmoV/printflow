@@ -34,7 +34,7 @@ export default function Ajustes() {
   const handleConnectGmail = async () => {
     try {
       const res = await api.get('/gmail/auth');
-      window.location.href = res.data.url;
+      window.open(res.data.url, '_blank', 'width=500,height=600');
     } catch (err) { setToast('Error al conectar Gmail'); }
   };
 
