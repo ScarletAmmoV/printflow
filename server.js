@@ -271,25 +271,23 @@ setInterval(async () => {
         const orders = await response.json();
 
         for (const order of orders) {
-
-           // ESPÍA: Nos muestra todo lo que trae el pedido
-          console.log("DATOS CRUDOS DE TIENDA NUBE:", JSON.stringify(order, null, 2));
-          
-          // Nos fijamos si ya tenemos este pedido en Kova (usamos el ID de Tienda Nube como número de orden)
-          const existe = await prisma.pedido.findFirst({
-            where: { tallerId: taller.id, numeroOrden: String(order.id) }
-          });
-
-
           // Si no existe, lo creamos
           if (!existe) {
             let detalleProductos = order.products.map(p => `${p.name} x${p.quantity}`).join(', ');
-            let nombreCompleto = order.customer_name ? order.customer_name.split(' ') : ['Cliente', 'TiendaNube'];
             
-            // NUEVO: Leemos los datos de facturación (si el cliente desmarcó la casilla, vendrán distintos)
-            let facturaNombre = order.billing_name || order.customer_name || 'Consumidor Final';
-            let facturaDoc = order.billing_document || order.customer_document || '00000000';
-            let facturaDomicilio = `${order.billing_address || ''} ${order.billing_city || ''} ${order.billing_zipcode || ''}`.trim() || 'Sin domicilio';
+            // Nombre del cliente (Tienda Nube lo manda junto en order.customer.name)
+            let nombreCompleto = order.customer?.name ? order.customer.name.split(' ') : ['Cliente', 'TiendaNube'];
+            
+            // Datos de contacto del cliente
+            let email = order.customer?.email || order.contact_email || null;
+            let telefono = order.customer?.phone || order.contact_phone || '0000000000';
+            let dni = order.customer?.identification || '00000000';
+            
+            // Datos de facturación (Si el cliente desmarcó "misma dirección", vienen aparte)
+            let facturaNombre = order.customer?.billing_name || order.customer?.name || 'Consumidor Final';
+            let facturaDoc = dni; // El documento de facturación es el mismo que el de identificación
+            let facturaDomicilio = `${order.customer?.billing_address || ''} ${order.customer?.billing_number || ''}, ${order.customer?.billing_city || ''}`.trim();
+            if (!order.customer?.billing_address) facturaDomicilio = 'Sin domicilio fiscal';
 
             await prisma.pedido.create({
               data: {
@@ -297,13 +295,12 @@ setInterval(async () => {
                 numeroOrden: String(order.id),
                 nombreCliente: nombreCompleto[0] || 'Cliente',
                 apellidoCliente: nombreCompleto.slice(1).join(' ') || '',
-                emailCliente: order.customer_email || null,
-                telefono: (order.customer_phone || order.billing_phone || '0000000000').replace(/\D/g, ''),
+                emailCliente: email,
+                telefono: telefono.replace(/\D/g, ''),
                 detalle: detalleProductos || 'Pedido online',
                 metodoEntrega: order.shipping_option ? 'envio' : 'retiro',
                 precioTotal: parseFloat(order.total) || 0,
                 estado: 'pendiente',
-                // NUEVO: Guardamos los datos de facturación
                 clienteFacturaNombre: facturaNombre,
                 clienteFacturaDocumento: facturaDoc,
                 clienteFacturaDomicilio: facturaDomicilio
